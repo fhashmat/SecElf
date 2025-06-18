@@ -31,12 +31,32 @@ with open("library_packages.csv", "r") as f: # Open the Stage B CSV file
 
 
 
-#
+#For doing that first we need to sign up "https://nvd.nist.gov/developers/request-an-api-key"
 # 3. For each (resolved package) entry: 
 # In this we will be working on the NVD database only for now. 
 #    a. Query the NVD API using package name and version
 #       - Extract CVE ID, CVSS score, description, and reference URL (URL is not required for now)
 #
+
+NVD_API_KEY = "xyz key which I will get"
+NVD_API_URL = "Some URL"
+HEADERS = {"apikey": NVD_API_KEY}
+
+def query_nvd(resolved_packages):
+    # Here I will query NVD for CVEs realted to the given resolved package name and it will return me a list with CVE information"
+     
+     results = [] 
+     keyword =  "{resolved_package}" # I am not sure about this still thinking...
+ params ={
+     "keywrodSearch": keyword,
+     "resultsPerPage": 200
+ }
+ 
+ #Here I need to write some code which could give it a delay because I think that NVD site might block us if we do not
+ time.sleep(1.2)  # Respect NVD rate limits (5 requests in 6 seconds)
+
+return results
+
 
 
 
