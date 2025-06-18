@@ -30,51 +30,32 @@ with open("library_packages.csv", "r") as f: # Open the Stage B CSV file
 #if the package version is package_version = "1.2.8" then it will remain like 1.2.8"
 
 
+#This is the project we will using for getting the cve related information. https://github.com/CVEProject/cvelistV5
+#cvelist5 is a Github based archive of all CVEs (Common Vulnerabilities and Exposures), maintained by the CVE project under MITRE.
+#Structure is like as follows:
+#cvelistV5/
+    #cves/
+        #2024/
+            #CVE-2024-001.json
+            #...
+#schema/
+    #cve_metadata_schema.json
+        #...
 
-#For doing that first we need to sign up "https://nvd.nist.gov/developers/request-an-api-key"
-# 3. For each (resolved package) entry: 
-# In this we will be working on the NVD database only for now. 
-#    a. Query the NVD API using package name and version
-#       - Extract CVE ID, CVSS score, description, and reference URL (URL is not required for now)
+#Every CVE is a JSON file with field like:
+# CVE ID, datepublished, cna, affected, product, vendor, versions, version further status?, descriptions, metrics
+
+#Feilds of interest from cvelistV5 JSON Structure:
+#cveMetadata.cveID -> The CVE identifier (e.g., CVE-2024-0001)
+# cveMetadata.datePublished       -> Date when the CVE was published
+# containers.cna.title            -> Short title or summary of the issue
+#containers.cna.descriptions     -> List of vulnerability descriptions (usually one in English)
+# containers.cna.metrics          -> CVSS v2 / v3 scoring metrics (baseScore, vector, etc.)
+# containers.cna.references       -> List of external reference URLs (NVD, vendor advisories, etc.)
 #
-
-NVD_API_KEY = "xyz key which I will get"
-NVD_API_URL = "Some URL"
-HEADERS = {"apikey": NVD_API_KEY}
-
-def query_nvd(resolved_packages):
-    # Here I will query NVD for CVEs realted to the given resolved package name and it will return me a list with CVE information"
-     
-     results = [] 
-     keyword =  "{resolved_package}" # I am not sure about this still thinking...
- params ={
-     "keywrodSearch": keyword,
-     "resultsPerPage": 200
- }
- 
- #Here I need to write some code which could give it a delay because I think that NVD site might block us if we do not
- time.sleep(1.2)  # Respect NVD rate limits (5 requests in 6 seconds)
-
-return results
-
-
-
-
-#    b. Scrape the Debian Security Tracker for the source package
-#       - Match the version and extract listed CVEs
-#    c. Scrape CVEDetails for matching product and version
-#       - Parse CVE table to extract relevant vulnerability details
-#
-# 4. For each discovered CVE, write an entry to 'package_cves.csv' with:
-#    - package_name
-#    - package_version
-#    - cve_id
-#    - cvss_score
-#    - description
-#    - source_url (Not Required for now)
-#
-# 5. Log progress and handle exceptions:
-#    - Respect rate limits and retry on request failures
-#    - Log number of CVEs found per package
-# -----------------------------------------------------------------------------
-
+# containers.cna.affected         -> List of affected software components:
+#     - affected[].vendor         -> Name of the vendor (e.g., "openssl")
+#     - affected[].product        -> Name of the product (e.g., "openssl")
+#     - affected[].versions       -> List of version entries:
+#         - versions[].version    -> Specific version string (e.g., "1.1.1f")
+#         - versions[].status     -> Status (e.g., "affected", "unaffected", "under investigation")
