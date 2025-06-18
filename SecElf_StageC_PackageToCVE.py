@@ -8,18 +8,29 @@ import re               # For basic regex parsing
 #
 # Algorithm Steps:
 #
-# 1. Read input from 'library_packages.csv' containing:
-#    - library_path
+# 1. Read input from 'library_packages.csv' containing: we only need to read one column here which contains the resolved package without commas                                                                                                                 
 #    - package_name
 #    - package_version
+#Accessing the resolved package column from the stage B
+resolved_packages = [] # created an empty list to store all the resolved packages got from the stage B column resolved packages
+with open("library_packages.csv", "r") as f: # Open the Stage B CSV file 
+    reader = csv.DictReader(f) #Use DictReader to read the CSV specific column
+    for row in reader: # Loop through each row in the csv file
+        resolved = row.get("ResolvedPackage", "").strip() # remove any leading or trailing spaces
+        if resolved: #just storing the values of resolved packages if they are present
+            resolved_packages.append(resolved)
+
 #
 # 2. Normalize package names and versions if necessary:
 #    - Convert package names to lowercase
 #    - Optionally strip distribution-specific suffixes from version strings
 #
-# 3. For each (package_name, package_version) entry:
+# 3. For each (package_name, package_version) entry: 
+# In this we will be working on the NVD database only for now. 
 #    a. Query the NVD API using package name and version
-#       - Extract CVE ID, CVSS score, description, and reference URL
+#       - Extract CVE ID, CVSS score, description, and reference URL (URL is not required for now)
+
+
 #    b. Scrape the Debian Security Tracker for the source package
 #       - Match the version and extract listed CVEs
 #    c. Scrape CVEDetails for matching product and version
@@ -31,7 +42,7 @@ import re               # For basic regex parsing
 #    - cve_id
 #    - cvss_score
 #    - description
-#    - source_url
+#    - source_url (Not Required for now)
 #
 # 5. Log progress and handle exceptions:
 #    - Respect rate limits and retry on request failures
