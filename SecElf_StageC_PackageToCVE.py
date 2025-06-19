@@ -65,7 +65,6 @@ import os               #walking through directories with os.walk()
 
 
 #Function 1 extract_metadata: extract cve_id and published date
-
 def extract_metadata(cve_json):
     meta = cve_json.get("cveMetadata", {})
     return {
@@ -73,15 +72,15 @@ def extract_metadata(cve_json):
         "published_date": meta.get("datePublished", "").split("T")[0]
     }
 
-print(">>> About to read CVE file...")
-
-
+# Fucntion 2 extrac_title: 
+def extract_title(cve_json):
+    return cve_json.get("containers", {}).get("cna", {}).get("title", "")
 
 test_cve_file = "cvelistV5/cves/2024/0xxx/CVE-2024-0250.json"
 
-
 with open(test_cve_file, "r") as f:
     data = json.load(f)
-    result = extract_metadata(data)
-    print(">>> Result:")
-    print(result)
+
+print(">>> Metadata:", extract_metadata(data))
+print(">>> Title:", extract_title(data))
+
