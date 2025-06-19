@@ -135,6 +135,18 @@ def extract_references(cve_json):
     urls = [ref.get("url", "") for ref in refs if "url" in ref]
     return "; ".join(urls)
 
+def extract_affected(cve_json):
+    affected_data = []  # Initialize an empty list to hold formatted affected entries
+    affected = cve_json.get("containers", {}).get("cna", {}).get("affected", [])  # Access the 'affected' section from the JSON safely
+    for item in affected:  # Loop through each affected entry
+        vendor = item.get("vendor", "")  # Extract the vendor name
+        product = item.get("product", "")  # Extract the product name
+        for version_info in item.get("versions", []):  # Loop through each version listed for this product
+            version = version_info.get("version", "")  # Get the version number
+            status = version_info.get("status", "")  # Get the status (e.g., affected, unaffected)
+            entry = f"{vendor}:{product}:{version}:{status}"  # Format the entry into a single string
+            affected_data.append(entry)  # Add the formatted entry to the list
+    return "; ".join(affected_data)  # Join all entries with a semicolon for CSV output
 
 #Below is the Testing code for F1, F2,F3,F4 and F5.
 
@@ -148,6 +160,8 @@ print(">>> Title:", extract_title(data))
 print(">>> Description", extract_description(data))
 print(">>> CVSS Score", extract_cvss_score(data))
 print(">>> References:", extract_references(data))
+print(">>> Affected:", extract_affected(data))
+
 
 
 
