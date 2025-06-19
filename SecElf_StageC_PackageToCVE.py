@@ -76,6 +76,18 @@ def extract_metadata(cve_json):
 def extract_title(cve_json):
     return cve_json.get("containers", {}).get("cna", {}).get("title", "")
 
+# Function 3 Extract Description
+def extract_description(cve_json):
+    descriptions = cve_json.get("containers", {}).get("cna", {}).get("descriptions", [])
+    for desc in descriptions:
+        if desc.get("lang", "").lower().startswith("en"):
+            return desc.get("value", "")
+    return "No English description found"
+
+
+
+#Below is the Testing code for F1, F2,F3,F4..
+
 test_cve_file = "cvelistV5/cves/2024/0xxx/CVE-2024-0250.json"
 
 with open(test_cve_file, "r") as f:
@@ -83,4 +95,5 @@ with open(test_cve_file, "r") as f:
 
 print(">>> Metadata:", extract_metadata(data))
 print(">>> Title:", extract_title(data))
+print(">>> Description", extract_description(data))
 
