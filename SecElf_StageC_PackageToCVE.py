@@ -84,6 +84,16 @@ def extract_description(cve_json):
             return desc.get("value", "")
     return "No English description found"
 
+# Function 4 extract_cvss_score
+def extract_cvss_score(cve_json):
+    metrics = cve_json.get("containers", {}).get("cna", {}).get("metrics", {})
+    for version_key in ["cvssV31", "cvssV30", "cvssV2"]:
+        if version_key in metrics:
+            try:
+                return metrics[version_key][0]["cvssData"]["baseScore"]
+            except (IndexError, KeyError):
+                continue
+    return "N/A"
 
 
 #Below is the Testing code for F1, F2,F3,F4..
@@ -96,4 +106,7 @@ with open(test_cve_file, "r") as f:
 print(">>> Metadata:", extract_metadata(data))
 print(">>> Title:", extract_title(data))
 print(">>> Description", extract_description(data))
+print(">>> CVSS Score", extract_cvss_score(data))
+
+
 
