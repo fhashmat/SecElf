@@ -95,8 +95,21 @@ def extract_cvss_score(cve_json):
                 continue
     return "N/A"
 
+#Function 5 extract reference URLs (I can use these URLs while writing the paper as reference)
 
-#Below is the Testing code for F1, F2,F3,F4..
+def extract_references(cve_json):  
+    refs = cve_json.get("containers", {}).get("cna", {}).get("references", [])     # Go into the JSON to find the "references" list under: containers → cna → references.                                                                              # If any key is missing, it will return an empty list instead of crashing.
+    
+    urls = [ref.get("url", "") for ref in refs if "url" in ref]                    # For each item in the "references" list, take the value of the "url" key (if it exists)
+                                                                                   # and store it in a new list called "urls"
+
+    return "; ".join(urls)                                                          # Join all the URLs into one long string, separated by semicolon and a space
+
+
+
+
+
+#Below is the Testing code for F1, F2,F3,F4 and F5.
 
 test_cve_file = "cvelistV5/cves/2024/0xxx/CVE-2024-0250.json"
 
@@ -107,6 +120,8 @@ print(">>> Metadata:", extract_metadata(data))
 print(">>> Title:", extract_title(data))
 print(">>> Description", extract_description(data))
 print(">>> CVSS Score", extract_cvss_score(data))
+print(">>> References:", extract_references(data))
+
 
 
 
