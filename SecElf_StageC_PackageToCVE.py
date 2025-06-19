@@ -96,17 +96,44 @@ def extract_cvss_score(cve_json):
     return "N/A"
 
 #Function 5 extract reference URLs (I can use these URLs while writing the paper as reference)
+# -----------------------------------------------------------------------------
+# Function: extract_references(cve_json)
+#
+# This function collects all external reference URLs from a CVE JSON entry.
+# 
+# 1. The CVE JSON structure includes a "containers" key, which contains a "cna"
+#    dictionary. Inside that, there's a "references" list, where each item may
+#    contain a "url" field pointing to a vendor advisory or security page.
+#
+# 2. The line:
+#       refs = cve_json.get("containers", {}).get("cna", {}).get("references", [])
+#    Safely walks through that structure. If any of the keys are missing,
+#    it returns an empty list instead of throwing an error.
+#
+#    Example of what `refs` might look like:
+#    [
+#        {"url": "https://security-advisory.com/foo"},
+#        {"url": "https://nvd.nist.gov/CVE-2024-xxxx"}
+#    ]
+#
+# 3. The line:
+#       urls = [ref.get("url", "") for ref in refs if "url" in ref]
+#    Is a list comprehension that:
+#      - Loops through each item in `refs`
+#      - Extracts the value of the "url" key
+#      - Skips any items that don't have a "url" key
+#
+# 4. The URLs are then joined using a semicolon (`; `) to form a single string
+#    that fits nicely in a single CSV column.
+#
+# Example return value:
+#   "https://security-advisory.com/foo; https://nvd.nist.gov/CVE-2024-xxxx"
+# -----------------------------------------------------------------------------
 
-def extract_references(cve_json):  
-    refs = cve_json.get("containers", {}).get("cna", {}).get("references", [])     # Go into the JSON to find the "references" list under: containers → cna → references.                                                                              # If any key is missing, it will return an empty list instead of crashing.
-    
-    urls = [ref.get("url", "") for ref in refs if "url" in ref]                    # For each item in the "references" list, take the value of the "url" key (if it exists)
-                                                                                   # and store it in a new list called "urls"
-
-    return "; ".join(urls)                                                          # Join all the URLs into one long string, separated by semicolon and a space
-
-
-
+def extract_references(cve_json):
+    refs = cve_json.get("containers", {}).get("cna", {}).get("references", [])
+    urls = [ref.get("url", "") for ref in refs if "url" in ref]
+    return "; ".join(urls)
 
 
 #Below is the Testing code for F1, F2,F3,F4 and F5.
