@@ -148,21 +148,59 @@ def extract_affected(cve_json):
             affected_data.append(entry)  # Add the formatted entry to the list
     return "; ".join(affected_data)  # Join all entries with a semicolon for CSV output
 
-#Below is the Testing code for F1, F2,F3,F4 and F5.
 
-test_cve_file = "cvelistV5/cves/2024/0xxx/CVE-2024-0250.json"
+def is_cve_relevant(cve_json, resolved_packages):
+    # Step 1: Match product + version in affected[]
+    affected = cve_json.get("containers", {}).get("cna", {}).get("affected", [])
+    for item in affected:
+        product = item.get("product", "").lower()
+        versions = item.get("versions", [])
+        for version_info in versions:
+            version = version_info.get("version", "").lower()
+            full_package = f"{product}:{version}"
+            if full_package in resolved_packages:
+                return True  # Exact match
+    
+    # Step 2: Heuristic match via title/description
+    title = extract_title(cve_json).lower()
+    desc = extract_description(cve_json).lower()
+    for pkg in resolved_packages:
+        if pkg in title or pkg in desc:
+            return True
+    
+    return False
+
+
+# --------------------------------------------------------------------
+# TEST BLOCK 1: Individual extractor testing (Metadata, Title, etc.)
+# --------------------------------------------------------------------
+test_cve_file = "cvelistV5/cves/2024/1xxx/CVE-2024-1492.json"
 
 with open(test_cve_file, "r") as f:
     data = json.load(f)
 
 print(">>> Metadata:", extract_metadata(data))
 print(">>> Title:", extract_title(data))
-print(">>> Description", extract_description(data))
-print(">>> CVSS Score", extract_cvss_score(data))
+print(">>> Description:", extract_description(data))
+print(">>> CVSS Score:", extract_cvss_score(data))
 print(">>> References:", extract_references(data))
 print(">>> Affected:", extract_affected(data))
 
 
+# --------------------------------------------------------------------
+# TEST BLOCK 2: Relevance checking based on package match
+# --------------------------------------------------------------------
+resolved_packages = []
+with open("library_packages.csv", "r") as f:
+    reader = csv.DictReader(f)
+    for row in reader:
+        pkg = row.get("ResolvedPackage", "").strip().lower()
+        if pkg:
+            resolved_packages.append(pkg)
 
-
-
+with open(test_cve_file, "r") as f:
+    cve_data = json.load(f)
+    if is_cve_relevant(cve_data, resolved_packages):
+        print("CVE is relevant to one of our packages!")
+    else:
+        print("Not relevant")
