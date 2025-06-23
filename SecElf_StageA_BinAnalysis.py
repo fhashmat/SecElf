@@ -30,8 +30,11 @@ if len(sys.argv) < 2:
     sys.exit(1) 
 
 # here we are getting the file name as a parameter from the user of this tool.
-with open(sys.argv[1], "rb") as f:
-    elf_file = ELFFile(f)
+fp = open(sys.argv[1], "rb")  # Opening the ELF file once and keeping it open
+elf_file = ELFFile(fp)
+
+#with open(sys.argv[1], "rb") as f:
+    #elf_file = ELFFile(f)
 
  #BELOW CODE IS FOR GETTING THE STRINGS OUT OF BINARY
     # Get the .rodata section where we have strings.
@@ -73,13 +76,20 @@ for section in sections:
 # CODE FOR GETTING LIBRARIES FROM .dynamic SECTION AND ADDING TO FINAL CSV
 
 # Extract .dynamic section for libraries
-with open(sys.argv[1], "rb") as f:
-    elf_file = ELFFile(f)
-    dynamic = elf_file.get_section_by_name('.dynamic')
-    if dynamic is not None:
-        libraries = [tag.needed for tag in dynamic.iter_tags() if tag.entry.d_tag == 'DT_NEEDED']
-    else:
-        libraries = []
+# Extract .dynamic section for libraries
+dynamic = elf_file.get_section_by_name('.dynamic')
+if dynamic is not None:
+    libraries = [tag.needed for tag in dynamic.iter_tags() if tag.entry.d_tag == 'DT_NEEDED']
+else:
+    libraries = []
+
+#with open(sys.argv[1], "rb") as f:
+ #   elf_file = ELFFile(f)
+  #  dynamic = elf_file.get_section_by_name('.dynamic')
+   # if dynamic is not None:
+    #    libraries = [tag.needed for tag in dynamic.iter_tags() if tag.entry.d_tag == 'DT_NEEDED']
+    #else:
+     #   libraries = []
 
 # BELOW CODE IS FOR STORING STRINGS, SYMBOLS, AND LIBRARIES WITH RESOLVED PATHS INTO A SINGLE CSV FILE
 
@@ -101,4 +111,5 @@ with open(sys.argv[1], "rb") as f:
             writer.writerow([decoded[i], symbols[i], lib_name, resolved_path])
 
     print(f"Combined strings, symbols, libraries and resolved paths written to elfdata_combined.csv")
+fp.close()
 
