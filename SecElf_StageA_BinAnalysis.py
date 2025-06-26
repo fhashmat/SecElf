@@ -97,18 +97,22 @@ else:
     ldd_map = get_ldd_library_paths(sys.argv[1])
 
     # Combine into one CSV (align shorter lists with empty strings)
-    max_len = max(len(decoded), len(symbols), len(libraries))
-    decoded += [""] * (max_len - len(decoded))
-    symbols += [""] * (max_len - len(symbols))
-    libraries += [""] * (max_len - len(libraries))
+    #max_len = max(len(decoded), len(symbols), len(libraries))
+    #decoded += [""] * (max_len - len(decoded))
+    #symbols += [""] * (max_len - len(symbols))
+    #libraries += [""] * (max_len - len(libraries))
 
     with open("elfdata_combined.csv", "w", newline="") as out:
         writer = csv.writer(out)
         writer.writerow(["String", "Symbol", "Library", "LibraryPath"]) # added a new column for resolved path
-        for i in range(max_len):
-            lib_name = libraries[i]
-            resolved_path = ldd_map.get(lib_name, "")
-            writer.writerow([decoded[i], symbols[i], lib_name, resolved_path])
+        for s, sym, lib in zip(decoded, symbols, libraries):
+            resolved_path = ldd_map.get(lib, "")
+            writer.writerow([s, sym, lib, resolved_path])
+
+        #for i in range(max_len):
+         #   lib_name = libraries[i]
+          #  resolved_path = ldd_map.get(lib_name, "")
+           # writer.writerow([decoded[i], symbols[i], lib_name, resolved_path])
 
     print(f"Combined strings, symbols, libraries and resolved paths written to elfdata_combined.csv")
 fp.close()
