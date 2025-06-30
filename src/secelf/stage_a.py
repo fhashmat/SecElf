@@ -1,4 +1,21 @@
 # stage_a.py
+# NOTE:
+# Previously, all Stage A logic was in a single file (SecElf_StageA_BinAnalysis.py)
+# containing:
+#   - functions like get_ldd_library_paths()
+#   - procedural code to open files, parse ELF, write CSV
+#   - command-line argument handling (sys.argv)
+# Problems with that structure:
+#   - hard to reuse
+#   - hard to test
+#   - everything was in one block
+#   - no separation between logic and CLI entry
+#
+# We are now splitting it into:
+#   - a reusable module (stage_a.py) with clean functions
+#   - a CLI runner script (run_stagea.py)
+# for a more maintainable and professional structure.
+
 
 from elftools.elf.elffile import ELFFile
 import re
