@@ -1,27 +1,39 @@
 # ---------------------------------------------------------------
-# test_stagea.py
+# SecElf Stage A Testbench (Test Suite)
 #
-# Unit tests for Stage A functionality of SecElf.
+# Description:
+#   This file acts as a testbench for validating the Stage A
+#   functionality of the SecElf tool. Each unit test corresponds
+#   to a key function, and is numbered for traceability.
 #
-# - Uses a known small ELF binary (tests/fixtures/dummy_binary)
-# - Verifies:
-#     * Stage A orchestration does not crash
-#     * extract_strings() returns expected printable strings
+# Tests included:
+#   1. test_stage_a_process_runs_without_crashing
+#   2. test_extract_strings_returns_nonempty_list
+#   3. test_extract_symbols_returns_main_symbol
+#   4. test_extract_libraries_returns_list
 #
-# The pytest framework is used:
-#   - Green lines = passing tests
-#   - Red lines   = failing tests
+# Usage:
+#   Run with:
+#     PYTHONPATH=src python3 -m pytest
+#
+# Notes:
 #   - Pytest automatically collects functions prefixed with 'test_'
-#
-# Run with:
-#   PYTHONPATH=src python3 -m pytest
+#   - Green dots (.) indicate passing tests
+#   - Red F's indicate failing tests
 # ---------------------------------------------------------------
 
 
 import pytest
-from secelf import stage_a
-from secelf.stage_a import extract_strings
 from elftools.elf.elffile import ELFFile
+from secelf import stage_a
+from secelf.stage_a import (
+    extract_strings,
+    extract_symbols,
+    extract_libraries_from_dynamic,
+    combine_stage_a_data
+)
+import os  # for testing CSV output
+
 
 # ---------------------------------------------------------------
 # Test: stage_a_process runs successfully
@@ -31,7 +43,7 @@ from elftools.elf.elffile import ELFFile
 # to ensure Stage A wiring is functional.
 # ---------------------------------------------------------------
 
-def test_stage_a_process_runs_without_crashing():
+def test_1_stage_a_process_runs_without_crashing():
     test_binary = "tests/fixtures/dummy_binary"
     try:
         stage_a.stage_a_process(test_binary)
@@ -48,7 +60,7 @@ def test_stage_a_process_runs_without_crashing():
 # test binary is a simple hello-world program.
 # ---------------------------------------------------------------
 
-def test_extract_strings_returns_nonempty_list():
+def test_2_extract_strings_returns_nonempty_list():
     """
     Tests that extract_strings returns a non-empty list from the dummy binary.
     """
@@ -57,3 +69,28 @@ def test_extract_strings_returns_nonempty_list():
         result = extract_strings(elf_file)
         assert isinstance(result, list)
         assert any("Hello" in s for s in result)  # because our hello.c binary prints "Hello"
+from secelf.stage_a import extract_symbols
+
+# ---------------------------------------------------------------
+# Test: extract_symbols returns expected symbols
+#
+# This test verifies that extract_symbols() can successfully
+# identify symbol names from the .dynsym or .symtab sections.
+# We expect at least 'main' in a typical hello-world ELF.
+# ---------------------------------------------------------------
+def test_3_extract_symbols_returns_main_symbol():
+    symbols = extract_symbols("tests/fixtures/dummy_binary")
+    assert isinstance(symbols, list)
+    assert any("main" in s for s in symbols), "Expected to find 'main' in symbol list"
+
+# ---------------------------------------------------------------
+# Test: extract_libraries_from_dynamic returns a list
+#
+# This test verifies that extract_libraries_from_dynamic() correctly
+# parses the .dynamic section, even if no DT_NEEDED entries are present.
+# ---------------------------------------------------------------
+def test_4_extract_libraries_returns_list():
+    with open("tests/fixtures/dummy_binary", "rb") as f:
+        elf_file = ELFFile(f)
+        libraries = extract_libraries_from_dynamic(elf_file)
+        assert isinstance(libraries, list)
