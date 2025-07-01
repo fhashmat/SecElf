@@ -176,7 +176,7 @@ def combine_stage_a_data(decoded, symbols, libraries, ldd_map):
         writer = csv.writer(out)
         writer.writerow(["String", "Symbol", "Library", "LibraryPath"])
         for s, sym, lib in zip(decoded, symbols, libraries):
-            resolved_path = ldd_map.get(lib, "")
+            resolved_path = ldd_map.get(lib, "MISSING")
             writer.writerow([s, sym, lib, resolved_path])
     print("Combined strings, symbols, libraries, and resolved paths written to elfdata_combined.csv")
 
