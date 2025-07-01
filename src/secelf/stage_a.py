@@ -178,6 +178,11 @@ def combine_stage_a_data(decoded, symbols, libraries, ldd_map):
         for s, sym, lib in zip(decoded, symbols, libraries):
             resolved_path = ldd_map.get(lib, "MISSING")
             writer.writerow([s, sym, lib, resolved_path])
+        # Second loop: handle ldd-only extras
+        extra_ldd_libs = set(ldd_map.keys()) - set(libraries)
+        for extra_lib in extra_ldd_libs:
+            resolved_path = ldd_map.get(extra_lib, "MISSING")
+            writer.writerow(["", "", extra_lib, resolved_path])
     print("Combined strings, symbols, libraries, and resolved paths written to elfdata_combined.csv")
 
 # ---------------------------------------------------------------
