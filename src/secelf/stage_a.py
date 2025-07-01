@@ -41,55 +41,65 @@ def get_ldd_library_paths(binary_path):
     except subprocess.CalledProcessError:
         return {}
 
-# you can move the following logic *for now* as a block
-# we will break it into proper functions later
-
-def stage_a_process(binary_path):
+def extract_symbols(binary_path):
     """
-    Performs Stage A ELF analysis and writes results to CSV.
+    Extract symbols from .dynsym and .symtab sections
     """
-    fp = open(binary_path, "rb")
-    elf_file = ELFFile(fp)
+    symbols = []
+    symbol_target = elf.ELFFile.load_from_path(binary_path)
+    for section in symbol_target.iter_sections():
+        if section.name in [".dynsym", ".symtab"]:
+            for sym in section.iter_symbols():
+                symbols.append(sym.name)
+    return symbols
 
+def extract_libraries_from_dynamic(elf_file):
+    """
+    Extract libraries from .dynamic section
+    """
+    dynamic = elf_file.get_section_by_name('.dynamic')
+    if dynamic is None:
+        return []
+    return [tag.needed for tag in dynamic.iter_tags() if tag.entry.d_tag == 'DT_NEEDED']
+
+
+def extract_strings(elf_file):
+    """
+    Extract printable strings from .rodata
+    """
     rodata = elf_file.get_section_by_name('.rodata')
     if rodata is None:
         print("No .rodata section found in this binary.")
-        fp.close()
-        return
+        return []
 
     raw_data = rodata.data()
     strings = re.findall(rb"[ -~]{2,}", raw_data)
     decoded = [s.decode('utf-8', errors='ignore') for s in strings]
+    return decoded
 
-    # symbols
-    symbol_target = elf.ELFFile.load_from_path(binary_path)
-    sections = []
-    for section in symbol_target.iter_sections():
-        if section.name == ".dynsym" or section.name == ".symtab":
-            sections.append(section)
-
-    symbols = []
-    for section in sections:
-        for sym in section.iter_symbols():
-            symbols.append(sym.name)
-
-    # libraries
-    dynamic = elf_file.get_section_by_name('.dynamic')
-    if dynamic is not None:
-        libraries = [tag.needed for tag in dynamic.iter_tags() if tag.entry.d_tag == 'DT_NEEDED']
-    else:
-        libraries = []
-
-    # resolve paths
-    ldd_map = get_ldd_library_paths(binary_path)
-
-    # write CSV
+def combine_stage_a_data(decoded, symbols, libraries, ldd_map):
+    """
+    Combine all extracted data and write to CSV
+    """
     with open("elfdata_combined.csv", "w", newline="") as out:
         writer = csv.writer(out)
         writer.writerow(["String", "Symbol", "Library", "LibraryPath"])
         for s, sym, lib in zip(decoded, symbols, libraries):
             resolved_path = ldd_map.get(lib, "")
             writer.writerow([s, sym, lib, resolved_path])
+    print("Combined strings, symbols, libraries, and resolved paths written to elfdata_combined.csv")
 
-    print(f"Combined strings, symbols, libraries and resolved paths written to elfdata_combined.csv")
-    fp.close()
+
+def stage_a_process(binary_path):
+    """
+    Orchestrates Stage A processing by calling the modular helpers.
+    """
+    with open(binary_path, "rb") as fp:
+        elf_file = ELFFile(fp)
+
+        decoded = extract_strings(elf_file)
+        symbols = extract_symbols(binary_path)
+        libraries = extract_libraries_from_dynamic(elf_file)
+        ldd_map = get_ldd_library_paths(binary_path)
+
+        combine_stage_a_data(decoded, symbols, libraries, ldd_map)
