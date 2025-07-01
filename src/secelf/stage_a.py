@@ -1,21 +1,43 @@
+# ---------------------------------------------------------------
 # stage_a.py
-# NOTE:
-# Previously, all Stage A logic was in a single file (SecElf_StageA_BinAnalysis.py)
-# containing:
-#   - functions like get_ldd_library_paths()
-#   - procedural code to open files, parse ELF, write CSV
-#   - command-line argument handling (sys.argv)
-# Problems with that structure:
+#
+# Context:
+#   Originally, Stage A logic was a single large script
+#   with mixed procedural code:
+#     - get_ldd_library_paths()
+#     - parsing ELF sections
+#     - CSV writing
+#     - sys.argv handling
+#
+# Problems:
 #   - hard to reuse
 #   - hard to test
-#   - everything was in one block
-#   - no separation between logic and CLI entry
+#   - poor separation of concerns
 #
-# We are now splitting it into:
-#   - a reusable module (stage_a.py) with clean functions
-#   - a CLI runner script (run_stagea.py)
-# for a more maintainable and professional structure.
+# Refactor goals:
+#   - clean modular functions in stage_a.py
+#   - separate CLI in run_stagea.py
+#   - improved maintainability and readability
+# ---------------------------------------------------------------
 
+# ---------------------------------------------------------------
+# Imports
+#
+# ELFFile:
+#   - from pyelftools, to parse ELF binary structures
+#
+# re:
+#   - for regular expressions to extract printable ASCII strings
+#
+# csv:
+#   - to write extracted data into CSV format
+#
+# subprocess:
+#   - to run the `ldd` system command for resolving shared library paths
+#
+# elf (alias):
+#   - imported for symbol extraction using preferred loading methods
+# ---------------------------------------------------------------
 
 from elftools.elf.elffile import ELFFile
 import re
@@ -23,7 +45,19 @@ import csv
 import subprocess
 import elftools.elf.elffile as elf
 
-
+# ---------------------------------------------------------------
+# get_ldd_library_paths()
+#
+# Description:
+#   Parses the output of the `ldd` command on a given binary
+#   to map shared library names to their resolved full filesystem paths.
+#
+# Inputs:
+#   binary_path (str) - path to the ELF binary
+#
+# Returns:
+#   dict of { library_name: resolved_path }
+# ---------------------------------------------------------------
 def get_ldd_library_paths(binary_path):
     """
     Parse `ldd` output to map library names to their resolved paths.
@@ -40,6 +74,19 @@ def get_ldd_library_paths(binary_path):
         return lib_map
     except subprocess.CalledProcessError:
         return {}
+# ---------------------------------------------------------------
+# extract_symbols()
+#
+# Description:
+#   Parses symbol tables (.dynsym and .symtab) to
+#   extract symbol names from an ELF binary.
+#
+# Inputs:
+#   binary_path (str) - path to the ELF binary
+#
+# Returns:
+#   list of symbol names
+# ---------------------------------------------------------------
 
 def extract_symbols(binary_path):
     """
@@ -53,6 +100,21 @@ def extract_symbols(binary_path):
                 symbols.append(sym.name)
     return symbols
 
+# ---------------------------------------------------------------
+# extract_libraries_from_dynamic()
+#
+# Description:
+#   Parses the .dynamic section to identify DT_NEEDED entries
+#   representing linked library dependencies in the ELF binary.
+#
+# Inputs:
+#   elf_file (ELFFile) - an open ELFFile object
+#
+# Returns:
+#   list of needed library names
+# ---------------------------------------------------------------
+
+
 def extract_libraries_from_dynamic(elf_file):
     """
     Extract libraries from .dynamic section
@@ -62,7 +124,19 @@ def extract_libraries_from_dynamic(elf_file):
         return []
     return [tag.needed for tag in dynamic.iter_tags() if tag.entry.d_tag == 'DT_NEEDED']
 
-
+# ---------------------------------------------------------------
+# extract_strings()
+#
+# Description:
+#   Extracts printable ASCII strings (2+ characters)
+#   from the .rodata section of an ELF file.
+#
+# Inputs:
+#   elf_file (ELFFile) - an open ELFFile object
+#
+# Returns:
+#   list of decoded strings
+# ---------------------------------------------------------------
 def extract_strings(elf_file):
     """
     Extract printable strings from .rodata
@@ -77,6 +151,23 @@ def extract_strings(elf_file):
     decoded = [s.decode('utf-8', errors='ignore') for s in strings]
     return decoded
 
+# ---------------------------------------------------------------
+# combine_stage_a_data()
+#
+# Description:
+#   Combines strings, symbols, libraries, and their resolved
+#   paths into a single CSV file for further analysis.
+#
+# Inputs:
+#   decoded (list of strings)
+#   symbols (list of symbols)
+#   libraries (list of libraries from .dynamic)
+#   ldd_map (dict of resolved paths)
+#
+# Returns:
+#   writes 'elfdata_combined.csv' file
+# ---------------------------------------------------------------
+
 def combine_stage_a_data(decoded, symbols, libraries, ldd_map):
     """
     Combine all extracted data and write to CSV
@@ -89,6 +180,20 @@ def combine_stage_a_data(decoded, symbols, libraries, ldd_map):
             writer.writerow([s, sym, lib, resolved_path])
     print("Combined strings, symbols, libraries, and resolved paths written to elfdata_combined.csv")
 
+# ---------------------------------------------------------------
+# stage_a_process()
+#
+# Description:
+#   The main orchestration function for Stage A. Calls all
+#   helper functions in sequence to extract ELF binary
+#   analysis data and writes the combined output to CSV.
+#
+# Inputs:
+#   binary_path (str) - path to the ELF binary
+#
+# Returns:
+#   None
+# ---------------------------------------------------------------
 
 def stage_a_process(binary_path):
     """
