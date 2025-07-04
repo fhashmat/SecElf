@@ -10,7 +10,7 @@
 #   - identify STT_FUNC symbols
 #   - record their names, addresses, sizes, and section index
 #   - store them in a CSV for later obfuscation or profiling analysis
-# How To Run?
+# How To Run? PYTHONPATH=src python3 scripts/run_stagea2.py tests/fixtures/dummy_binary
 #
 # ---------------------------------------------------------------
 
@@ -50,6 +50,8 @@ def parse_function_metadata(sym):
         "address": sym.entry.get('st_value', 0),
         "size": sym.entry.get('st_size', 0),
         "section_index": sym.entry.get('st_shndx', 'UNKNOWN'),
+        "symbol_type": sym['st_info']['type'],
+
     }
 
 def is_function_symbol(sym):
@@ -122,14 +124,20 @@ def write_functions_to_csv(functions, output_file="functions.csv"):
             "DemangledName", 
             "Address", 
             "Size", 
-            "SectionIndex"
+            "SectionIndex",
+            "SymbolType"
         ])
         for func in functions:
             demangled = demangle_symbol(func["name"])
             writer.writerow([
-                func["name"],       # keep original
-                demangled,          # add readable
+                func["name"],
                 hex(func["address"]),
                 func["size"],
-                func["section_index"]
-            ])
+                func["section_index"],
+                func["symbol_type"]
+])
+
+
+
+
+
