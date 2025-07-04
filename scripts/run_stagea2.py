@@ -6,6 +6,7 @@
 # then delegates the function-extraction work to
 # the extract_function_symbols function inside the reusable
 # stage_a2_function_extractor module.
+# How to Run? PYTHONPATH=src python3 scripts/run_stagea2.py tests/fixtures/dummy_binary
 # ---------------------------------------------------------------
 
 import sys
