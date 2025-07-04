@@ -14,6 +14,7 @@
 
 from elftools.elf.elffile import ELFFile
 import csv
+import subprocess
 
 # ---------------------------------------------------------------
 # extract_function_symbols()
@@ -74,4 +75,34 @@ def write_functions_to_csv(functions, output_file="functions.csv"):
                 func["size"],
                 func["section_index"]
             ])
+
+# ---------------------------------------------------------------
+# demangle_symbol()
+#
+# Description:
+#   Uses the external `c++filt` tool to demangle C++ mangled names
+#   into human-readable names.
+#
+# Inputs:
+#   mangled_name (str) - the raw symbol name (e.g. "_Z3fooi")
+#
+# Returns:
+#   demangled_name (str) - the readable name (e.g. "foo(int)")
+#
+# Notes:
+#   - If c++filt is not installed, will return the original name.
+#   - Handles subprocess errors gracefully.
+# ---------------------------------------------------------------
+def demangle_symbol(mangled_name):
+    try:
+        result = subprocess.run(
+            ["c++filt", mangled_name],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        return result.stdout.strip()
+    except Exception:
+        # fallback to original if demangling fails
+        return mangled_name
 
