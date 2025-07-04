@@ -45,13 +45,33 @@ def extract_function_symbols(elf_file):
             continue
 
         for sym in section.iter_symbols():
-            if sym['st_info']['type'] == 'STT_FUNC':
-                func_entry = {
-                    "name": sym.name,
-                    "address": sym['st_value'],
-                    "size": sym['st_size'],
-                    "section_index": sym['st_shndx'],
-                }
-                functions.append(func_entry)
+            try:
+                if sym['st_info']['type'] == 'STT_FUNC':
+                    func_entry = {
+                        "name": sym.name,
+                        "address": sym.entry['st_value'],
+                        "size": sym.entry['st_size'],
+                        "section_index": sym.entry['st_shndx'],
+                    }
+                    functions.append(func_entry)
+            except KeyError:
+                # If st_info or any entry is missing, just skip this symbol
+                continue
 
     return functions
+def write_functions_to_csv(functions, output_file="functions.csv"):
+    """
+    Write extracted function information to a CSV file.
+    """
+    import csv
+    with open(output_file, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["FunctionName", "Address", "Size", "SectionIndex"])
+        for func in functions:
+            writer.writerow([
+                func["name"],
+                hex(func["address"]),
+                func["size"],
+                func["section_index"]
+            ])
+
