@@ -36,7 +36,26 @@ import subprocess
 #       ...
 #     ]
 # ---------------------------------------------------------------
-
+# ---------------------------------------------------------------
+# parse_function_metadata()
+#
+# Description:
+#   Given an ELF symbol known to be a function, this helper
+#   extracts metadata such as:
+#     - name of the function
+#     - address where it resides
+#     - size in bytes
+#     - section index in the ELF file
+#     - symbol type (for completeness)
+#   It uses safe .get() calls to avoid missing fields.
+#
+# Inputs:
+#   sym (Symbol object) - an ELF function symbol
+#
+# Returns:
+#   dict with keys:
+#     name, address, size, section_index, symbol_type
+# ---------------------------------------------------------------
 def parse_function_metadata(sym):
     """
     Extracts metadata for a given symbol:
@@ -53,7 +72,20 @@ def parse_function_metadata(sym):
         "symbol_type": sym['st_info']['type'],
 
     }
-
+# ---------------------------------------------------------------
+# is_function_symbol()
+#
+# Description:
+#   Helper function to determine if a given ELF symbol is a
+#   function. It checks whether the symbol type matches
+#   'STT_FUNC', which represents functions in ELF symbol tables.
+#
+# Inputs:
+#   sym (Symbol object) - the ELF symbol to check
+#
+# Returns:
+#   True if the symbol is of type STT_FUNC, False otherwise
+# ---------------------------------------------------------------
 def is_function_symbol(sym):
     """
     Checks if a symbol is a function (STT_FUNC)
@@ -62,7 +94,21 @@ def is_function_symbol(sym):
         return sym['st_info']['type'] == 'STT_FUNC'
     except KeyError:
         return False
-
+# ---------------------------------------------------------------
+# extract_function_symbols()
+#
+# Description:
+#   Walks through the ELF binary's .symtab and .dynsym
+#   sections to collect all function symbols (STT_FUNC).
+#   Uses is_function_symbol() to filter, and
+#   parse_function_metadata() to organize extracted data.
+#
+# Inputs:
+#   elf_file (ELFFile) - parsed ELF file
+#
+# Returns:
+#   list of dictionaries with function metadata
+# ---------------------------------------------------------------
 def extract_function_symbols(elf_file):
     """
     Extract only function symbols (STT_FUNC) from .symtab and .dynsym.
@@ -85,18 +131,16 @@ def extract_function_symbols(elf_file):
 # demangle_symbol()
 #
 # Description:
-#   Uses the external `c++filt` tool to demangle C++ mangled names
-#   into human-readable names.
+#   Uses the external `c++filt` command-line utility to
+#   convert mangled C++ symbol names (e.g., "_Z3fooi")
+#   into human-readable names (e.g., "foo(int)").
 #
 # Inputs:
-#   mangled_name (str) - the raw symbol name (e.g. "_Z3fooi")
+#   mangled_name (str) - the raw symbol name
 #
 # Returns:
-#   demangled_name (str) - the readable name (e.g. "foo(int)")
-#
-# Notes:
-#   - If c++filt is not installed, will return the original name.
-#   - Handles subprocess errors gracefully.
+#   demangled_name (str) - or falls back to original if
+#   demangling fails or c++filt is missing.
 # ---------------------------------------------------------------
 def demangle_symbol(mangled_name):
     try:
@@ -111,7 +155,21 @@ def demangle_symbol(mangled_name):
         # fallback to original if demangling fails
         return mangled_name
 
-
+# ---------------------------------------------------------------
+# write_functions_to_csv()
+#
+# Description:
+#   Writes the collected function metadata to a CSV file,
+#   including both the original and demangled function names,
+#   address, size, section index, and symbol type.
+#
+# Inputs:
+#   functions (list of dicts) - function metadata extracted
+#   output_file (str) - name of the CSV output file
+#
+# Returns:
+#   None (creates CSV on disk)
+# ---------------------------------------------------------------
 def write_functions_to_csv(functions, output_file="functions.csv"):
     """
     Write extracted function information to a CSV file.
