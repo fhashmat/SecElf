@@ -37,6 +37,30 @@ import subprocess
 #     ]
 # ---------------------------------------------------------------
 
+def parse_function_metadata(sym):
+    """
+    Extracts metadata for a given symbol:
+    - name
+    - address
+    - size
+    - section index
+    """
+    return {
+        "name": sym.name,
+        "address": sym.entry.get('st_value', 0),
+        "size": sym.entry.get('st_size', 0),
+        "section_index": sym.entry.get('st_shndx', 'UNKNOWN'),
+    }
+
+def is_function_symbol(sym):
+    """
+    Checks if a symbol is a function (STT_FUNC)
+    """
+    try:
+        return sym['st_info']['type'] == 'STT_FUNC'
+    except KeyError:
+        return False
+
 def extract_function_symbols(elf_file):
     """
     Extract only function symbols (STT_FUNC) from .symtab and .dynsym.
@@ -48,20 +72,12 @@ def extract_function_symbols(elf_file):
             continue
 
         for sym in section.iter_symbols():
-            try:
-                if sym['st_info']['type'] == 'STT_FUNC':
-                    func_entry = {
-                        "name": sym.name,
-                        "address": sym.entry['st_value'],
-                        "size": sym.entry['st_size'],
-                        "section_index": sym.entry['st_shndx'],
-                    }
-                    functions.append(func_entry)
-            except KeyError:
-                # If st_info or any entry is missing, just skip this symbol
-                continue
+            if is_function_symbol(sym):
+                func_entry = parse_function_metadata(sym)
+                functions.append(func_entry)
 
     return functions
+
 
 # ---------------------------------------------------------------
 # demangle_symbol()
