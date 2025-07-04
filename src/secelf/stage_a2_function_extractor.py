@@ -10,6 +10,8 @@
 #   - identify STT_FUNC symbols
 #   - record their names, addresses, sizes, and section index
 #   - store them in a CSV for later obfuscation or profiling analysis
+# How To Run?
+#
 # ---------------------------------------------------------------
 
 from elftools.elf.elffile import ELFFile
@@ -60,21 +62,6 @@ def extract_function_symbols(elf_file):
                 continue
 
     return functions
-def write_functions_to_csv(functions, output_file="functions.csv"):
-    """
-    Write extracted function information to a CSV file.
-    """
-    import csv
-    with open(output_file, "w", newline="") as f:
-        writer = csv.writer(f)
-        writer.writerow(["FunctionName", "Address", "Size", "SectionIndex"])
-        for func in functions:
-            writer.writerow([
-                func["name"],
-                hex(func["address"]),
-                func["size"],
-                func["section_index"]
-            ])
 
 # ---------------------------------------------------------------
 # demangle_symbol()
@@ -106,3 +93,27 @@ def demangle_symbol(mangled_name):
         # fallback to original if demangling fails
         return mangled_name
 
+
+def write_functions_to_csv(functions, output_file="functions.csv"):
+    """
+    Write extracted function information to a CSV file.
+    Includes a separate column for demangled names.
+    """
+    with open(output_file, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "FunctionName", 
+            "DemangledName", 
+            "Address", 
+            "Size", 
+            "SectionIndex"
+        ])
+        for func in functions:
+            demangled = demangle_symbol(func["name"])
+            writer.writerow([
+                func["name"],       # keep original
+                demangled,          # add readable
+                hex(func["address"]),
+                func["size"],
+                func["section_index"]
+            ])
