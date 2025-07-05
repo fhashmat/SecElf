@@ -48,3 +48,29 @@ def categorize_function(func_name):
     
     # fallback
     return "cleartext"
+
+# ---------------------------------------------------------------
+# write_categorized_obfuscated_functions()
+#
+# Description:
+#   Writes the list of obfuscated functions with their assigned
+#   categories to a CSV file for further review.
+#
+# Inputs:
+#   obfuscated_functions (list of dicts) - output of categorizer
+#   output_file (str) - name of the CSV file
+#
+# Returns:
+#   None (writes file to disk)
+# ---------------------------------------------------------------
+def write_categorized_obfuscated_functions(obfuscated_functions, output_file="stagea3_obfuscated_functions.csv"):
+    import csv
+    with open(output_file, "w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["FunctionName", "Category"])
+        for func in obfuscated_functions:
+            writer.writerow([
+                func["name"],
+                func["category"]
+            ])
+    print(f"Wrote categorized obfuscated functions to {output_file}")
