@@ -1,0 +1,4 @@
+FunctionName,DemangledName,Address,Size,SectionIndex,SymbolType
+_ZN3fooEv,foo,0x1234,64,16,STT_FUNC
+encrypt_block,encrypt_block,0x2345,128,16,STT_FUNC
+x,x,0x3456,16,16,STT_FUNC
