@@ -74,3 +74,26 @@ def write_categorized_obfuscated_functions(obfuscated_functions, output_file="st
                 func["category"]
             ])
     print(f"Wrote categorized obfuscated functions to {output_file}")
+# ---------------------------------------------------------------
+# placeholder_obfuscated_function_categorizer()
+#
+# Description:
+#   This placeholder function simulates analyzing the
+#   demangled functions from Stage A2 and assigns a
+#   basic obfuscation category.
+#
+# Inputs:
+#   functions (list of dicts) - functions extracted from Stage A2
+#
+# Returns:
+#   list of dicts with an added "obfuscation_category" key
+# ---------------------------------------------------------------
+
+def placeholder_ghidra_obfuscated_function_categorizer(functions):
+    """
+    Dummy placeholder categorizer — assigns 'Unknown' for now
+    until proper Ghidra or ML-based classifiers are built.
+    """
+    for func in functions:
+        func["obfuscation_category"] = "Unknown"
+    return functions
