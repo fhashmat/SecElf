@@ -10,9 +10,12 @@
 # ---------------------------------------------------------------
 
 import sys
-from secelf.stage_a2_function_extractor import extract_function_symbols
 from elftools.elf.elffile import ELFFile
-import csv
+from secelf.stage_a2_function_extractor import (
+    extract_function_symbols,
+    write_functions_to_csv
+)
+
 
 def main():
     # Check if the user gave the required ELF binary filename
@@ -28,17 +31,8 @@ def main():
         elf_file = ELFFile(f)
         functions = extract_function_symbols(elf_file)
 
-    # Write functions to CSV
-    with open("functions.csv", "w", newline="") as out:
-        writer = csv.writer(out)
-        writer.writerow(["FunctionName", "Address", "Size", "SectionIndex"])
-        for func in functions:
-            writer.writerow([
-                func["name"],
-                hex(func["address"]),
-                func["size"],
-                func["section_index"]
-            ])
+    # Write functions to CSV using the module’s dedicated writer
+    write_functions_to_csv(functions)
 
     print("Functions extracted and written to functions.csv")
 
