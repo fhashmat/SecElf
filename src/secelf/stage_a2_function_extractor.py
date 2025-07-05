@@ -172,16 +172,15 @@ def demangle_symbol(mangled_name):
 # ---------------------------------------------------------------
 def write_functions_to_csv(functions, output_file="functions.csv"):
     """
-    Write extracted function information to a CSV file.
-    Includes a separate column for demangled names.
+    Write extracted function information to a CSV file, including demangled names.
     """
     with open(output_file, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow([
-            "FunctionName", 
-            "DemangledName", 
-            "Address", 
-            "Size", 
+            "FunctionName",
+            "DemangledName",
+            "Address",
+            "Size",
             "SectionIndex",
             "SymbolType"
         ])
@@ -189,11 +188,13 @@ def write_functions_to_csv(functions, output_file="functions.csv"):
             demangled = demangle_symbol(func["name"])
             writer.writerow([
                 func["name"],
+                demangled,
                 hex(func["address"]),
                 func["size"],
                 func["section_index"],
                 func["symbol_type"]
-])
+            ])
+
 
 
 
