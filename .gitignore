@@ -1,0 +1,13 @@
+# ignore csv outputs
+*.csv
+
+# ignore Python bytecode
+*.pyc
+__pycache__/
+
+# ignore test fixtures
+tests/fixtures/*
+
+# ignore editor swap/lock files
+*~
+*.swp
