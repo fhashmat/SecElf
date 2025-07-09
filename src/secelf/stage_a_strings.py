@@ -38,17 +38,20 @@ import os
 
 def extract_strings(elf_file):
     """
-    Extract printable ASCII strings from .rodata section.
+    Extract printable strings from all sections with raw bytes (not just .rodata).
     """
-    rodata = elf_file.get_section_by_name('.rodata')
-    if rodata is None:
-        print("No .rodata section found in this binary.")
-        return []
+    strings = []
+    for section in elf_file.iter_sections():
+        if not section.is_null() and hasattr(section, 'data'):
+            try:
+                raw_data = section.data()
+                found = re.findall(rb"[ -~]{2,}", raw_data)
+                decoded = [s.decode('utf-8', errors='ignore') for s in found]
+                strings.extend(decoded)
+            except Exception:
+                continue
+    return strings
 
-    raw_data = rodata.data()
-    strings = re.findall(rb"[ -~]{2,}", raw_data)
-    decoded = [s.decode('utf-8', errors='ignore') for s in strings]
-    return decoded
 
 
 
