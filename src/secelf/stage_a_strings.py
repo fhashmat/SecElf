@@ -38,19 +38,22 @@ import os
 
 def extract_strings(elf_file):
     """
-    Extract printable strings from all sections with raw bytes (not just .rodata).
+    Extract printable strings from all ELF sections and track their section of origin.
+    Returns list of (section_name, string) tuples.
     """
-    strings = []
+    string_entries = []
     for section in elf_file.iter_sections():
         if not section.is_null() and hasattr(section, 'data'):
             try:
                 raw_data = section.data()
                 found = re.findall(rb"[ -~]{2,}", raw_data)
                 decoded = [s.decode('utf-8', errors='ignore') for s in found]
-                strings.extend(decoded)
+                for s in decoded:
+                    string_entries.append((section.name, s))
             except Exception:
                 continue
-    return strings
+    return string_entries
+
 
 
 
@@ -69,9 +72,10 @@ def stage_a_strings_process(binary_path):
 
     with open(csv_name, "w", newline="") as out:
         writer = csv.writer(out)
-        writer.writerow(["String"])
-        for s in strings:
-            writer.writerow([s])
+        writer.writerow(["Section", "String"])
+        for section, string in strings:
+            writer.writerow([section, string])
+
 
     print(f"Extracted strings written to {csv_name}")
 
