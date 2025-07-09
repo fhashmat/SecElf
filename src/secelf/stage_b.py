@@ -12,7 +12,7 @@ def resolve_library_packages(input_csv="elfdata_combined.csv"):
     with open(input_csv, "r") as f:
         reader = csv.DictReader(f)
         for row in reader:
-            library = row.get("LibraryPath", "")
+            library = row.get("Resolved Path (ldd)", "")
             if library:
                 print("Processing:", library)
                 FORMAT = "%{NAME},%{VERSION}\n"
