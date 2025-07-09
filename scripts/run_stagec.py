@@ -11,6 +11,7 @@ from secelf.stage_c import (
     extract_references,
     extract_affected,
     is_cve_relevant,
+    write_stagec_output_to_csv,
 )
 
 def main():
@@ -44,6 +45,22 @@ def main():
         print("CVE is relevant to one of our packages!")
     else:
         print("CVE not relevant.")
+    # Prepare results for CSV
+    result_dict = {
+        "cve_id": extract_metadata(data).get("cve_id", ""),
+        "published_date": extract_metadata(data).get("published_date", ""),
+        "title": extract_title(data),
+        "description": extract_description(data),
+        "cvss_score": extract_cvss_score(data),
+        "references": extract_references(data),
+        "affected": extract_affected(data),
+        "relevant": is_cve_relevant(data, resolved_packages)
+    }
+
+    # Write to CSV
+    write_stagec_output_to_csv([result_dict])
+    print("Results written to stagec_output.csv")
+
 
 if __name__ == "__main__":
     main()

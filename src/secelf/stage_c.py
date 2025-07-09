@@ -1,4 +1,6 @@
 import json
+import csv
+
 
 def extract_metadata(cve_json):
     meta = cve_json.get("cveMetadata", {})
@@ -61,3 +63,42 @@ def is_cve_relevant(cve_json, resolved_packages):
         if pkg in title or pkg in desc:
             return True
     return False
+
+def write_stagec_output_to_csv(results, output_file="stagec_output.csv"):
+    """
+    Takes a list of dictionaries (results) and writes to CSV.
+    Each dictionary should include:
+        - cve_id
+        - published_date
+        - title
+        - description
+        - cvss_score
+        - references
+        - affected
+        - relevant (boolean)
+    """
+    headers = [
+        "CVE ID",
+        "Published Date",
+        "Title",
+        "Description",
+        "CVSS Score",
+        "References",
+        "Affected",
+        "Relevant"
+    ]
+
+    with open(output_file, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
+        writer.writeheader()
+        for item in results:
+            writer.writerow({
+                "CVE ID": item.get("cve_id", ""),
+                "Published Date": item.get("published_date", ""),
+                "Title": item.get("title", ""),
+                "Description": item.get("description", ""),
+                "CVSS Score": item.get("cvss_score", ""),
+                "References": item.get("references", ""),
+                "Affected": item.get("affected", ""),
+                "Relevant": "Yes" if item.get("relevant") else "No"
+            })
