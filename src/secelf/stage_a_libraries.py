@@ -45,6 +45,7 @@ from elftools.elf.elffile import ELFFile
 import re
 import csv
 import subprocess
+import os
 import elftools.elf.elffile as elf
 
 # ---------------------------------------------------------------
@@ -181,13 +182,17 @@ def extract_libraries_from_dynamic(elf_file):
 #   writes 'elfdata_combined.csv' file
 # ---------------------------------------------------------------
 
-def combine_stage_a_data(libraries, ldd_map):
+def combine_stage_a_data(libraries, ldd_map, binary_path):
     """
     Create a detailed CSV with libraries from pyelftools and ldd.
     """
     seen = set()
 
-    with open("elfdata_combined.csv", "w", newline="") as out:
+    binary_name = os.path.basename(binary_path)
+    csv_name = f"lib_analysis_{binary_name}.csv"
+
+    with open(csv_name, "w", newline="") as out:
+
         writer = csv.writer(out)
         writer.writerow(["Library (pyelftools)", "Resolved Path (ldd)", "Note"])
 
@@ -237,6 +242,7 @@ def stage_a_process(binary_path):
         for lib, path in ldd_map.items():
             print(f"{lib} => {path}")
 
-        combine_stage_a_data(libraries, ldd_map)
+        combine_stage_a_data(libraries, ldd_map, binary_path)
+
 
 
