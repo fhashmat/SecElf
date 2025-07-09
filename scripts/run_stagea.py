@@ -6,7 +6,7 @@
 # inside the reusable stage_a module.
 
 import sys
-from secelf.stage_a import stage_a_process
+from secelf.stage_a_libraries import stage_a_process
 
 def main():
     # Check if the user gave the required ELF binary filename
