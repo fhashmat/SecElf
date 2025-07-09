@@ -2,6 +2,7 @@
 
 import sys
 import json
+import csv
 from secelf.stage_c import (
     extract_metadata,
     extract_title,
@@ -33,7 +34,8 @@ def main():
     # load resolved packages from previous CSV
     resolved_packages = []
     with open("library_packages.csv", "r") as f:
-        for row in json.load(f):
+        reader = csv.DictReader(f)
+        for row in reader:
             pkg = row.get("ResolvedPackage", "").strip().lower()
             if pkg:
                 resolved_packages.append(pkg)
