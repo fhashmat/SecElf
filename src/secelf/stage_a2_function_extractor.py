@@ -168,9 +168,9 @@ def demangle_symbol(mangled_name):
 #   output_file (str) - name of the CSV output file
 #
 # Returns:
-#   None (creates CSV on disk)
+#   None (creates CSV on disk) 
 # ---------------------------------------------------------------
-def write_functions_to_csv(functions, output_file="functions.csv"):
+def write_functions_to_csv(functions, output_file="functions_stage_a2.csv"):
     """
     Write extracted function information to a CSV file,
     including demangled names and an Obfuscated column (set to UNKNOWN for now).

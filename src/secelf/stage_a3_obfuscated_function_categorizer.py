@@ -67,13 +67,22 @@ def write_categorized_obfuscated_functions(obfuscated_functions, output_file="st
     import csv
     with open(output_file, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["FunctionName", "Category"])
+        
+        # Write CSV header
+        writer.writerow([
+            "FunctionName",
+            "ObfuscationCategory"
+        ])
+
+        # Write function rows
         for func in obfuscated_functions:
             writer.writerow([
-                func["name"],
-                func["category"]
+                func["FunctionName"],
+                func["obfuscation_category"]
             ])
     print(f"Wrote categorized obfuscated functions to {output_file}")
+
+
 # ---------------------------------------------------------------
 # placeholder_obfuscated_function_categorizer()
 #
@@ -97,3 +106,4 @@ def placeholder_ghidra_obfuscated_function_categorizer(functions):
     for func in functions:
         func["obfuscation_category"] = "Unknown"
     return functions
+ 
