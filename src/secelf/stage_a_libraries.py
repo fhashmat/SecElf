@@ -63,19 +63,30 @@ import elftools.elf.elffile as elf
 def get_ldd_library_paths(binary_path):
     """
     Parse `ldd` output to map library names to their resolved paths.
+    Handles lines with and without '=>'.
     """
     try:
         ldd_output = subprocess.check_output(['ldd', binary_path]).decode()
         lib_map = {}
         for line in ldd_output.splitlines():
-            match = re.match(r'\s*(\S+)\s+=>\s+(\S+)', line)
-            if match:
-                libname = match.group(1)
-                libpath = match.group(2)
-                lib_map[libname] = libpath
+            line = line.strip()
+            if "=>" in line:
+                # Matches: libXYZ.so => /path/to/libXYZ.so (0x...)
+                parts = line.split("=>")
+                if len(parts) >= 2:
+                    libname = parts[0].strip()
+                    libpath = parts[1].strip().split()[0]  # remove address part
+                    lib_map[libname] = libpath
+            else:
+                # Matches: /lib64/ld-linux-x86-64.so.2 (0x...)
+                tokens = line.split()
+                if len(tokens) >= 1:
+                    libname = tokens[0]
+                    lib_map[libname] = libname  # same for both key and path
         return lib_map
     except subprocess.CalledProcessError:
         return {}
+
 # ---------------------------------------------------------------
 # extract_symbols()
 #
@@ -139,19 +150,19 @@ def extract_libraries_from_dynamic(elf_file):
 # Returns:
 #   list of decoded strings
 # ---------------------------------------------------------------
-def extract_strings(elf_file):
-    """
-    Extract printable strings from .rodata
-    """
-    rodata = elf_file.get_section_by_name('.rodata')
-    if rodata is None:
-        print("No .rodata section found in this binary.")
-        return []
+#def extract_strings(elf_file):
+ #   """
+  #  Extract printable strings from .rodata
+   # """
+    #rodata = elf_file.get_section_by_name('.rodata')
+    #if rodata is None:
+     #   print("No .rodata section found in this binary.")
+      #  return []
 
-    raw_data = rodata.data()
-    strings = re.findall(rb"[ -~]{2,}", raw_data)
-    decoded = [s.decode('utf-8', errors='ignore') for s in strings]
-    return decoded
+    #raw_data = rodata.data()
+    #strings = re.findall(rb"[ -~]{2,}", raw_data)
+    #decoded = [s.decode('utf-8', errors='ignore') for s in strings]
+    #return decoded
 
 # ---------------------------------------------------------------
 # combine_stage_a_data()
@@ -170,22 +181,28 @@ def extract_strings(elf_file):
 #   writes 'elfdata_combined.csv' file
 # ---------------------------------------------------------------
 
-def combine_stage_a_data(decoded, symbols, libraries, ldd_map):
+def combine_stage_a_data(libraries, ldd_map):
     """
-    Combine all extracted data and write to CSV
+    Create a detailed CSV with libraries from pyelftools and ldd.
     """
+    seen = set()
+
     with open("elfdata_combined.csv", "w", newline="") as out:
         writer = csv.writer(out)
-        writer.writerow(["String", "Symbol", "Library", "LibraryPath"])
-        for s, sym, lib in zip(decoded, symbols, libraries):
-            resolved_path = ldd_map.get(lib, "MISSING")
-            writer.writerow([s, sym, lib, resolved_path])
-        # Second loop: handle ldd-only extras
-        extra_ldd_libs = set(ldd_map.keys()) - set(libraries)
-        for extra_lib in extra_ldd_libs:
-            resolved_path = ldd_map.get(extra_lib, "MISSING")
-            writer.writerow(["", "", extra_lib, resolved_path])
-    print("Combined strings, symbols, libraries, and resolved paths written to elfdata_combined.csv")
+        writer.writerow(["Library (pyelftools)", "Resolved Path (ldd)", "Note"])
+
+        # Step 1: libraries from pyelftools (.dynamic)
+        for lib in libraries:
+            path = ldd_map.get(lib, "MISSING")
+            note = "" if lib in ldd_map else "Not in ldd"
+            writer.writerow([lib, path, note])
+            seen.add(lib)
+
+        # Step 2: remaining libraries from ldd only
+        for lib, path in ldd_map.items():
+            if lib not in seen:
+                writer.writerow(["", path, "Only in ldd"])
+
 
 # ---------------------------------------------------------------
 # stage_a_process()
@@ -204,14 +221,22 @@ def combine_stage_a_data(decoded, symbols, libraries, ldd_map):
 
 def stage_a_process(binary_path):
     """
-    Orchestrates Stage A processing by calling the modular helpers.
+    Extracts and compares shared libraries from ELF .dynamic section and ldd.
     """
     with open(binary_path, "rb") as fp:
         elf_file = ELFFile(fp)
-
-        decoded = extract_strings(elf_file)
-        symbols = extract_symbols(binary_path)
         libraries = extract_libraries_from_dynamic(elf_file)
         ldd_map = get_ldd_library_paths(binary_path)
 
-        combine_stage_a_data(decoded, symbols, libraries, ldd_map)
+        #  Debug prints
+        print("==== PYELFTOOLS LIBRARIES ====")
+        for lib in libraries:
+            print(lib)
+
+        print("\n==== LDD MAP ====")
+        for lib, path in ldd_map.items():
+            print(f"{lib} => {path}")
+
+        combine_stage_a_data(libraries, ldd_map)
+
+
