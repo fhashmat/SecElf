@@ -13,12 +13,14 @@
 #
 # How To Run:
 #   PYTHONPATH=src python3 scripts/run_stagea_strings.py <binary>
+#   PYTHONPATH=src python3 scripts/run_stagea_strings.py tests/fixtures/dummy_binary 
 #
 # ---------------------------------------------------------------
 from elftools.elf.elffile import ELFFile
 import csv
 import re
-from secelf.stage_a_libraries import extract_strings
+import os
+
 # ---------------------------------------------------------------
 # stage_a_strings_process()
 #
@@ -32,6 +34,25 @@ from secelf.stage_a_libraries import extract_strings
 # Returns:
 #   None (writes stagea_strings.csv to disk)
 # ---------------------------------------------------------------
+
+
+def extract_strings(elf_file):
+    """
+    Extract printable ASCII strings from .rodata section.
+    """
+    rodata = elf_file.get_section_by_name('.rodata')
+    if rodata is None:
+        print("No .rodata section found in this binary.")
+        return []
+
+    raw_data = rodata.data()
+    strings = re.findall(rb"[ -~]{2,}", raw_data)
+    decoded = [s.decode('utf-8', errors='ignore') for s in strings]
+    return decoded
+
+
+
+
 def stage_a_strings_process(binary_path):
     """
     Extract strings from .rodata and write to a separate CSV.
@@ -40,10 +61,14 @@ def stage_a_strings_process(binary_path):
         elf_file = ELFFile(fp)
         strings = extract_strings(elf_file)
 
-    with open("stagea_strings.csv", "w", newline="") as out:
+    binary_name = os.path.basename(binary_path)
+    csv_name = f"strings_extracted_{binary_name}.csv"
+
+    with open(csv_name, "w", newline="") as out:
         writer = csv.writer(out)
         writer.writerow(["String"])
         for s in strings:
             writer.writerow([s])
 
-    print("Extracted strings written to stagea_strings.csv")
+    print(f"Extracted strings written to {csv_name}")
+
