@@ -1,5 +1,7 @@
 # ---------------------------------------------------------------
 # stage_a.py
+#PYTHONPATH=src python3 scripts/run_stagea.py tests/fixtures/dummy_binary
+
 #
 # Context:
 #   Originally, Stage A logic was a single large script
