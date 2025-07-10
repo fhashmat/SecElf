@@ -102,3 +102,45 @@ def write_stagec_output_to_csv(results, output_file="stagec_output.csv"):
                 "Affected": item.get("affected", ""),
                 "Relevant": "Yes" if item.get("relevant") else "No"
             })
+def write_stagec_output_to_csv_with_resolved_packages(results, output_file="stagec_output.csv"):
+    """
+    Writes CVE analysis results to a CSV file including resolved package name as the first column.
+
+    Each entry in `results` should be a dictionary with:
+        - resolved_package
+        - cve_id
+        - published_date
+        - title
+        - description
+        - cvss_score
+        - references
+        - affected
+        - relevant (bool)
+    """
+    headers = [
+        "ResolvedPackage",
+        "CVE ID",
+        "Published Date",
+        "Title",
+        "Description",
+        "CVSS Score",
+        "References",
+        "Affected",
+        "Relevant"
+    ]
+
+    with open(output_file, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=headers)
+        writer.writeheader()
+        for item in results:
+            writer.writerow({
+                "ResolvedPackage": item.get("resolved_package", ""),
+                "CVE ID": item.get("cve_id", ""),
+                "Published Date": item.get("published_date", ""),
+                "Title": item.get("title", ""),
+                "Description": item.get("description", ""),
+                "CVSS Score": item.get("cvss_score", ""),
+                "References": item.get("references", ""),
+                "Affected": item.get("affected", ""),
+                "Relevant": "Yes" if item.get("relevant") else "No"
+            })
