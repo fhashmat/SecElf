@@ -3,6 +3,7 @@
 import sys
 import json
 import csv
+import pprint
 from secelf.stage_c import (
     extract_metadata,
     extract_title,
@@ -11,6 +12,7 @@ from secelf.stage_c import (
     extract_references,
     extract_affected,
     is_cve_relevant,
+    extract_cwe,
     write_stagec_output_to_csv_with_resolved_packages,
 )
 
@@ -21,6 +23,7 @@ def main():
     try:
         with open(test_cve_file, "r") as f:
             data = json.load(f)
+        pprint.pprint(data)
     except FileNotFoundError:
         print(f"Test CVE file not found: {test_cve_file}")
         sys.exit(1)
@@ -52,10 +55,12 @@ def main():
                 "title": extract_title(data),
                 "description": extract_description(data),
                 "cvss_score": extract_cvss_score(data),
+                "cwe": extract_cwe(data),
                 "references": extract_references(data),
                 "affected": extract_affected(data),
                 "relevant": relevance
-            })
+})
+
 
     write_stagec_output_to_csv_with_resolved_packages(results)
 if __name__ == "__main__":

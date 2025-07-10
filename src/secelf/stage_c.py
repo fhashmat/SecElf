@@ -19,15 +19,34 @@ def extract_description(cve_json):
             return desc.get("value", "")
     return "No English description found"
 
-def extract_cvss_score(cve_json):
-    metrics = cve_json.get("containers", {}).get("cna", {}).get("metrics", {})
-    for version_key in ["cvssV31", "cvssV30", "cvssV2"]:
-        if version_key in metrics:
-            try:
-                return metrics[version_key][0]["cvssData"]["baseScore"]
-            except (IndexError, KeyError):
-                continue
-    return "N/A"
+#def extract_cvss_score(cve_json):
+#    metrics = cve_json.get("containers", {}).get("cna", {}).get("metrics", {})
+#    for version_key in ["cvssV31", "cvssV30", "cvssV2"]:
+#        if version_key in metrics:
+#            try:
+#                return metrics[version_key][0]["cvssData"]["baseScore"]
+#            except (IndexError, KeyError):
+#                continue
+#    return "N/A"
+def extract_cvss_score(data):
+    try:
+        metrics = data["containers"]["cna"].get("metrics", [])
+        for entry in metrics:
+            if "cvssV3_1" in entry:
+                return entry["cvssV3_1"].get("baseScore", "N/A")
+        return "N/A"
+    except Exception:
+        return "N/A"
+def extract_cwe(data):
+    try:
+        problem_types = data["containers"]["cna"].get("problemTypes", [])
+        for pt in problem_types:
+            for desc in pt.get("descriptions", []):
+                if "description" in desc:
+                    return desc["description"]
+        return ""
+    except Exception:
+        return ""
 
 def extract_references(cve_json):
     refs = cve_json.get("containers", {}).get("cna", {}).get("references", [])
@@ -63,6 +82,11 @@ def is_cve_relevant(cve_json, resolved_packages):
         if pkg in title or pkg in desc:
             return True
     return False
+def extract_title(data):
+    try:
+        return data["containers"]["cna"].get("title", "")
+    except Exception:
+        return ""
 
 def write_stagec_output_to_csv(results, output_file="stagec_output.csv"):
     """
@@ -113,6 +137,7 @@ def write_stagec_output_to_csv_with_resolved_packages(results, output_file="stag
         - title
         - description
         - cvss_score
+        - cwe
         - references
         - affected
         - relevant (bool)
@@ -124,6 +149,7 @@ def write_stagec_output_to_csv_with_resolved_packages(results, output_file="stag
         "Title",
         "Description",
         "CVSS Score",
+        "CWE",
         "References",
         "Affected",
         "Relevant"
@@ -140,6 +166,7 @@ def write_stagec_output_to_csv_with_resolved_packages(results, output_file="stag
                 "Title": item.get("title", ""),
                 "Description": item.get("description", ""),
                 "CVSS Score": item.get("cvss_score", ""),
+                "CWE": item.get("cwe", ""),
                 "References": item.get("references", ""),
                 "Affected": item.get("affected", ""),
                 "Relevant": "Yes" if item.get("relevant") else "No"
