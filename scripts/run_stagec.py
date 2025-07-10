@@ -13,6 +13,7 @@ from secelf.stage_c import (
     extract_affected,
     is_cve_relevant,
     extract_cwe,
+    extract_problem_types,
     write_stagec_output_to_csv_with_resolved_packages,
 )
 
@@ -34,6 +35,9 @@ def main():
     print(">>> CVSS Score:", extract_cvss_score(data))
     print(">>> References:", extract_references(data))
     print(">>> Affected:", extract_affected(data))
+    problem_types = extract_problem_types(data)
+    print(f">>> Problem Types: {problem_types}")
+
 
     # load resolved packages from previous CSV
     results = []
@@ -58,7 +62,9 @@ def main():
                 "cwe": extract_cwe(data),
                 "references": extract_references(data),
                 "affected": extract_affected(data),
-                "relevant": relevance
+                "relevant": relevance,
+                "problem_types": extract_problem_types(data),
+
 })
 
 
