@@ -4,6 +4,7 @@
 # It handles reading the command-line arguments,
 # then delegates the real analysis work to the stage_a_process function
 # inside the reusable stage_a module.
+# To Run PYTHONPATH=src python3 scripts/run_stagea.py tests/fixtures/dummy_binary
 
 import sys
 from secelf.stage_a_libraries import stage_a_process
@@ -16,6 +17,7 @@ def main():
     # Get the binary path from the first argument
     binary_path = sys.argv[1]
     # Call the Stage A processing function with this path
+    print(binary_path)
     stage_a_process(binary_path)
 # This idiom is a standard Python pattern:
 # When this script is executed directly (like: python run_stagea.py),
