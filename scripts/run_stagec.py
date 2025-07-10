@@ -57,6 +57,6 @@ def main():
                 "relevant": relevance
             })
 
-
+    write_stagec_output_to_csv_with_resolved_packages(results)
 if __name__ == "__main__":
     main()
