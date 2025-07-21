@@ -7,6 +7,27 @@
 # Hardcoded list of commercial tool binaries
 # Each entry includes: tool name, version, path (or placeholder), and status
 # -------------------------------
+# -----------------------------------------------------------------------------
+# Legend for Stage E1 File System Access Classification
+#
+# This legend defines how each file system access column is interpreted
+# based on strace-detected file interactions (via openat calls).
+#
+# Symbol Legend:
+#   ● = Present       → Strong evidence of this file type accessed
+#   ❍ = Partial       → Weak or indirect access (e.g., generic file, temp file)
+#   ◦ = None          → No evidence of access to this type
+#
+# Column                 File Types It Represents
+# --------------------------------------------------------------------------
+# Artifact Access        .v, .sv, .lef, .def, .gds, .lib, .spef, .sdc, etc.
+# Log Access             .log, .txt, stdout.log, stderr.log, run.log, etc.
+# Config Access          .cfg, .conf, .rc, .ini, .xml, setup scripts, etc.
+# Other File Access      .dat, .out, scratch files, /tmp/..., misc binaries
+# -----------------------------------------------------------------------------
+
+from secelf.stage_e1_toolcap import run_strace
+
 binaries_to_check = [
     {
         "tool": "Genus",
@@ -497,7 +518,17 @@ def main():
     ]
 
     for entry in binaries_to_check:
-        print(f"[INFO] Tool: {entry['tool']} {entry['version']} -> {entry['path']} [{entry['status']}]")
+        tool = entry["tool"]
+        version = entry["version"]
+        path = entry["path"]
+        status = entry["status"]
+
+        print(f"[INFO] Tool: {tool} {version} → {path} [{status}]")
+        output_file = run_strace(tool, version, path)
+
+        if output_file:
+            print(f"[OK] Saved strace to: {output_file}")
+
 
 
 
