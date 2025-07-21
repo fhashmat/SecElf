@@ -19,7 +19,7 @@ from secelf.stage_c import (
     write_stagec_output_to_csv_with_resolved_packages,
 )
 
-# ✅ Normalize package names to match CVE product:version
+# Normalize package names to match CVE product:version
 def normalize_package_name(pkg_name):
     pkg_name = re.sub(r"\.x86_64$|\.i686$|\.aarch64$|\.armv7hl$", "", pkg_name)
     match = re.match(r"^([a-zA-Z0-9_\+\-\.]+)-(\d+\.\d+)", pkg_name)
@@ -29,20 +29,20 @@ def normalize_package_name(pkg_name):
         return f"{base}:{version}"
     return pkg_name
 
-def load_resolved_packages(tsv_path):
+def load_resolved_packages(csv_path):
     resolved_packages = []
-    with open(tsv_path, "r") as f:
-        reader = csv.DictReader(f, delimiter='\t')
+    with open(csv_path, "r") as f:
+        reader = csv.DictReader(f)
         for row in reader:
-            pkg = row.get("BINARY_PACKAGE", "").strip().lower()
+            pkg = row.get("BinaryPackage", "").strip().lower()
             if not pkg:
-                pkg = row.get("SOURCE_PACKAGE", "").strip().lower()
+                pkg = row.get("SourcePackage", "").strip().lower()
             if pkg:
                 resolved_packages.append(pkg)
     return resolved_packages
 
 def main():
-    resolved_packages_raw = load_resolved_packages("resolved_libs.tsv")
+    resolved_packages_raw = load_resolved_packages("library_packages.csv")
     resolved_packages = [normalize_package_name(pkg) for pkg in resolved_packages_raw]
 
     print(f"[INFO] Loaded {len(resolved_packages)} resolved packages (normalized)")
