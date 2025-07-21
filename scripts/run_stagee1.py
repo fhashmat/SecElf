@@ -206,6 +206,127 @@ binaries_to_check = [
         "path": "TODO",
         "status": "pending"
     },
+        {
+        "tool": "Pegasus",
+        "version": "22.23",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Pegasus",
+        "version": "22.24",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Pegasus",
+        "version": "23.20",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Pegasus",
+        "version": "24.10",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "PVS",
+        "version": "21.12",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "PVS",
+        "version": "22.21",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "PVS",
+        "version": "23.11",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Quantus",
+        "version": "20.12",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Quantus",
+        "version": "21.22",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Quantus",
+        "version": "22.10",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Quantus",
+        "version": "22.11",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Quantus",
+        "version": "23.11",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Sigrity",
+        "version": "2019",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Sigrity",
+        "version": "2023.1",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Sigrity",
+        "version": "2024.0",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "SPB",
+        "version": "23.10",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Spectre",
+        "version": "1.5.1",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Spectre",
+        "version": "1.7.1",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Spectre",
+        "version": "1.9.1",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Spectre",
+        "version": "20.10",
+        "path": "TODO",
+        "status": "pending"
+    },
+
 ]
 
 
