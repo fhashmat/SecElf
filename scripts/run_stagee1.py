@@ -3,9 +3,225 @@
 # run_stagee1.py
 # CLI to run Stage E1: tool capability analysis
 
+# -------------------------------
+# Hardcoded list of commercial tool binaries
+# Each entry includes: tool name, version, path (or placeholder), and status
+# -------------------------------
+binaries_to_check = [
+    {
+        "tool": "Genus",
+        "version": "21.17",
+        "path": "/package/eda/cadence/GENUS2117/tools.lnx86/genus/bin/64bit/genus",
+        "status": "not stripped"
+    },
+    {
+        "tool": "Allegro",
+        "version": "17.4",
+        "path": "/package/eda/cadence/IC618/tools/bin/allegro_batch.exe",
+        "status": "not stripped"
+    },
+    {
+        "tool": "Allegro",
+        "version": "23.1",
+        "path": "/package/eda/cadence/SPB231/tools.lnx86/bin/allegro_batch.exe",
+        "status": "not stripped"
+    },
+    {
+        "tool": "Assura",
+        "version": "6.17.4.16",
+        "path": "MISSING",  # Not accessible
+        "status": "not found"
+    },
+    {
+        "tool": "EMX",
+        "version": "6.3",
+        "path": "/package/eda/cadence/INTEGRAND63/tools.lnx86/emx/bin/64bit/emx",
+        "status": "stripped"
+    },
+    {
+        "tool": "Jasper",
+        "version": "2024.12",
+        "path": "/package/eda/cadence/jasper_2024.12p002/Linux64/bin/jg_console",
+        "status": "stripped"
+    },
+    {
+        "tool": "Virtuoso",
+        "version": "6.1.8",
+        "path": "TODO",  # Placeholder
+        "status": "pending"
+    },
+    {
+        "tool": "GPdk45",
+        "version": "6.0",
+        "path": "NOT_A_TOOL",  # Docs only
+        "status": "not applicable"
+    },
+        {
+        "tool": "Assura",
+        "version": "6.18.4.16",
+        "path": "MISSING",  # Broken path
+        "status": "not found"
+    },
+    {
+        "tool": "Assura",
+        "version": "23.1.4.17",
+        "path": "MISSING",  # Broken path
+        "status": "not found"
+    },
+    {
+        "tool": "Conformal",
+        "version": "18.10",
+        "path": "SKIPPED",  # Symbolic link complexity
+        "status": "skipped"
+    },
+    {
+        "tool": "Conformal",
+        "version": "21.20",
+        "path": "SKIPPED",  # Symbolic link complexity
+        "status": "skipped"
+    },
+    {
+        "tool": "Conformal",
+        "version": "23.10",
+        "path": "SKIPPED",  # Symbolic link complexity
+        "status": "skipped"
+    },
+    {
+        "tool": "Conformal",
+        "version": "24.10",
+        "path": "SKIPPED",  # Symbolic link complexity
+        "status": "skipped"
+    },
+    {
+        "tool": "DDI",
+        "version": "22.14",
+        "path": "SEE_GENUS_PATHS",  # Might be embedded in genus
+        "status": "combined tool"
+    },
+    {
+        "tool": "DDI",
+        "version": "23.11",
+        "path": "SEE_GENUS_PATHS",  # Might be embedded in genus
+        "status": "combined tool"
+    },
+    {
+        "tool": "DDI",
+        "version": "23.14",
+        "path": "SEE_GENUS_PATHS",  # Might be embedded in genus
+        "status": "combined tool"
+    },
+    {
+        "tool": "EMX",
+        "version": "6.0",
+        "path": "/package/eda/cadence/INTEGRAND60/bin/emx",
+        "status": "stripped"
+    },
+    {
+        "tool": "EMX",
+        "version": "6.2",
+        "path": "/package/eda/cadence/INTEGRAND62/tools.lnx86/emx/bin/64bit/emx",
+        "status": "stripped"
+    },
+    {
+        "tool": "EMX",
+        "version": "23.2",
+        "path": "/package/eda2/cadence/EMX20232/tools.lnx86/emx/bin/64bit/emx",
+        "status": "stripped"
+    },
+    {
+        "tool": "GPdk45",
+        "version": "6.0",
+        "path": "NOT_A_TOOL",
+        "status": "documentation only"
+    },
+    {
+        "tool": "Incisive",
+        "version": "15.2",
+        "path": "/package/eda/cadence/INCISIVE152.05",
+        "status": "not found"
+    },
+    {
+        "tool": "Innovus",
+        "version": "21.12",
+        "path": "/package/eda/cadence/INNOVUS211/tools.lnx86/innovus/bin/64bit/innovus",
+        "status": "not stripped"
+    },
+        {
+        "tool": "Innovus",
+        "version": "21.17",
+        "path": "/package/eda/cadence/INNOVUS211.7/tools.lnx86/innovus/bin/64bit/innovus",
+        "status": "not stripped"
+    },
+    {
+        "tool": "Liberate",
+        "version": "23.10",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Liberate",
+        "version": "23.16",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "MMSIM",
+        "version": "151",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Modus",
+        "version": "21.10",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Modus",
+        "version": "22.11",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Modus",
+        "version": "23.11",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "MVS",
+        "version": "20.11",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "MVS",
+        "version": "21.12",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Pegasus",
+        "version": "21.30",
+        "path": "TODO",
+        "status": "pending"
+    },
+]
+
+
 def main():
     print("[INFO] Stage E1 runner started")
-    # We’ll add binary path input and logic step-by-step
+
+    # Hardcoded list of commercial tool binaries
+    binaries = [
+        "/package/eda2/cadence/DDI2314/INNOVUS231/tools.lnx86/genus/bin/64bit/genus",
+        # Add more paths below as needed
+    ]
+
+    for entry in binaries_to_check:
+        print(f"[INFO] Tool: {entry['tool']} {entry['version']} -> {entry['path']} [{entry['status']}]")
+
+
 
 if __name__ == "__main__":
     main()
