@@ -1,6 +1,19 @@
 import json
 import csv
+import re
 
+def normalize_package_name(pkg_name):
+    """
+    Converts package name like 'glibc-2.28-251.0.3.el8_10.22.x86_64'
+    into 'glibc:2.28'
+    """
+    pkg_name = re.sub(r"\.x86_64$|\.i686$|\.aarch64$|\.armv7hl$", "", pkg_name)
+    match = re.match(r"^([a-zA-Z0-9_\+\-\.]+)-(\d+\.\d+(?:\.\d+)?)", pkg_name)
+    if match:
+        product = match.group(1)
+        version = match.group(2)
+        return f"{product}:{version}".lower()
+    return pkg_name.lower()
 
 def extract_metadata(cve_json):
     meta = cve_json.get("cveMetadata", {})
@@ -9,9 +22,6 @@ def extract_metadata(cve_json):
         "published_date": meta.get("datePublished", "").split("T")[0]
     }
 
-#def extract_title(cve_json):
-#    return cve_json.get("containers", {}).get("cna", {}).get("title", "")
-
 def extract_description(cve_json):
     descriptions = cve_json.get("containers", {}).get("cna", {}).get("descriptions", [])
     for desc in descriptions:
@@ -19,15 +29,6 @@ def extract_description(cve_json):
             return desc.get("value", "")
     return "No English description found"
 
-#def extract_cvss_score(cve_json):
-#    metrics = cve_json.get("containers", {}).get("cna", {}).get("metrics", {})
-#    for version_key in ["cvssV31", "cvssV30", "cvssV2"]:
-#        if version_key in metrics:
-#            try:
-#                return metrics[version_key][0]["cvssData"]["baseScore"]
-#            except (IndexError, KeyError):
-#                continue
-#    return "N/A"
 def extract_cvss_score(data):
     try:
         metrics = data["containers"]["cna"].get("metrics", [])
@@ -37,6 +38,7 @@ def extract_cvss_score(data):
         return "N/A"
     except Exception:
         return "N/A"
+
 def extract_cwe(data):
     try:
         problem_types = data["containers"]["cna"].get("problemTypes", [])
@@ -66,36 +68,62 @@ def extract_affected(cve_json):
             affected_data.append(entry)
     return "; ".join(affected_data)
 
-def is_cve_relevant(cve_json, resolved_packages):
-    affected = cve_json.get("containers", {}).get("cna", {}).get("affected", [])
+def is_cve_relevant(cve_json, resolved_packages, debug=False):
+    if isinstance(cve_json, list):
+        cve_json = next((item for item in cve_json if isinstance(item, dict)), {})
+    elif not isinstance(cve_json, dict):
+        if debug:
+            print("[WARN] Skipping non-dict CVE entry")
+        return False
 
-    print("\n[DEBUG] Resolved Packages Being Checked:")
-    for pkg in resolved_packages:
-        print(f"  - {pkg}")
+    normalized_pkgs = [pkg.lower() for pkg in resolved_packages]
+    if debug:
+        print(f"[DEBUG] Normalized packages: {normalized_pkgs}")
+
+    containers = cve_json.get("containers", {})
+    if isinstance(containers, list):
+        containers = next((item for item in containers if isinstance(item, dict) and "cna" in item), {})
+    elif not isinstance(containers, dict):
+        containers = {}
+
+    affected = containers.get("cna", {}).get("affected", [])
 
     for item in affected:
-        product = item.get("product", "").lower()
+    # Prefer `product`, fallback to `packageName`
+        product = item.get("product") or item.get("packageName") or ""
+        product = product.lower()
         versions = item.get("versions", [])
         for version_info in versions:
             version = version_info.get("version", "").lower()
-            full_package = f"{product}:{version}"
-            print(f"[DEBUG] Affected product:version = {full_package}")
-            if full_package in resolved_packages:
-                print(f"[MATCH] Direct match found: {full_package}")
+            full = f"{product}:{version}"
+            if debug:
+                print(f"[DEBUG] Affected product:version = {full}")
+            if full in normalized_pkgs:
+                if debug:
+                    print(f"[MATCH] Direct match found: {full}")
                 return True
 
-    title = extract_title(cve_json).lower()
-    desc = extract_description(cve_json).lower()
-    print(f"[DEBUG] Title = {title}")
-    print(f"[DEBUG] Description = {desc}")
+        for version_info in versions:
+            version = version_info.get("version", "").lower()
 
-    for pkg in resolved_packages:
-        if pkg in title or pkg in desc:
-            print(f"[MATCH] Heuristic match found for: {pkg}")
-            return True
+            # If product is empty, try using vendor, or skip
+            if not product:
+                if vendor:
+                    product = vendor
+                else:
+                    continue
 
-    print("[DEBUG] No match found.")
+            full = f"{product}:{version}"
+            if debug:
+                print(f"[DEBUG] Affected product:version = {full}")
+            for norm_pkg in normalized_pkgs:
+                if norm_pkg == full or full.startswith(norm_pkg + ".") or full.startswith(norm_pkg + ":"):
+                    if debug:
+                        print(f"[MATCH] Found match: {norm_pkg} in {full}")
+                    return True
+
     return False
+
 
 
 def extract_title(data):
@@ -103,84 +131,20 @@ def extract_title(data):
         return data["containers"]["cna"].get("title", "")
     except Exception:
         return ""
-    
+
 def extract_problem_types(cve_json):
     try:
         problems = cve_json.get("containers", {}).get("cna", {}).get("problemTypes", [])
         descriptions = []
-
         for entry in problems:
             for desc in entry.get("descriptions", []):
                 if "description" in desc:
                     descriptions.append(desc["description"])
-
         return "; ".join(descriptions) if descriptions else "N/A"
     except Exception:
         return "N/A"
 
-
-
-def write_stagec_output_to_csv(results, output_file="stagec_output.csv"):
-    """
-    Takes a list of dictionaries (results) and writes to CSV.
-    Each dictionary should include:
-        - ResolvedPackage
-        - cve_id
-        - published_date
-        - title
-        - description
-        - cvss_score
-        - problem_types
-        - references
-        - affected
-        - relevant (boolean)
-    """
-    headers = [
-        "ResolvedPackage",
-        "CVE ID",
-        "Published Date",
-        "Title",
-        "Description",
-        "CVSS Score",
-        "Problem Types",
-        "References",
-        "Affected",
-        "Relevant"
-    ]
-
-    with open(output_file, "w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=headers)
-        writer.writeheader()
-        for item in results:
-            writer.writerow({
-                "ResolvedPackage": item.get("resolved_package", ""),
-                "CVE ID": item.get("cve_id", ""),
-                "Published Date": item.get("published_date", ""),
-                "Title": item.get("title", ""),
-                "Description": item.get("description", ""),
-                "CVSS Score": item.get("cvss_score", ""),
-                "Problem Types": item.get("problem_types", ""),
-                "References": item.get("references", ""),
-                "Affected": item.get("affected", ""),
-                "Relevant": "Yes" if item.get("relevant") else "No"
-            })
 def write_stagec_output_to_csv_with_resolved_packages(results, output_file="stagec_output.csv"):
-    """
-    Writes CVE analysis results to a CSV file including resolved package name as the first column.
-
-    Each entry in `results` should be a dictionary with:
-        - resolved_package
-        - cve_id
-        - published_date
-        - title
-        - description
-        - cvss_score
-        - cwe
-        - problem_types
-        - references
-        - affected
-        - relevant (bool)
-    """
     headers = [
         "ResolvedPackage",
         "CVE ID",
