@@ -326,6 +326,163 @@ binaries_to_check = [
         "path": "TODO",
         "status": "pending"
     },
+        {
+        "tool": "Spectre",
+        "version": "21.10",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Spectre",
+        "version": "21.10.612",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Spectre",
+        "version": "21.10.824",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Spectre",
+        "version": "23.10.063",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Spectre",
+        "version": "23.10.509",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Spectre",
+        "version": "24.10",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "SSV",
+        "version": "21.12",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "SSV",
+        "version": "22.12",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "SSV",
+        "version": "23.00",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "SSV",
+        "version": "23.11",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "UltraSim",
+        "version": "18.1",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Virtuoso Advanced",
+        "version": "20.1.14",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Virtuoso Advanced",
+        "version": "20.1.33",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Virtuoso Advanced",
+        "version": "20.1.34",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Virtuoso",
+        "version": "6.1.7",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Virtuoso",
+        "version": "23.10",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Virtuoso",
+        "version": "23.10.07",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Virtuoso",
+        "version": "23.10.11",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Virtuoso",
+        "version": "23.10.060",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "VManager",
+        "version": "21.09",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "VManager",
+        "version": "23.03",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "VManager",
+        "version": "24.03",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Xcelium",
+        "version": "21.09",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Xcelium",
+        "version": "22.09",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Xcelium",
+        "version": "23.03",
+        "path": "TODO",
+        "status": "pending"
+    },
+    {
+        "tool": "Xcelium",
+        "version": "24.03",
+        "path": "TODO",
+        "status": "pending"
+    },
+
 
 ]
 
