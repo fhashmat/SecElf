@@ -190,6 +190,13 @@ def combine_stage_a_data(libraries, ldd_map, binary_path):
 
     binary_name = os.path.basename(binary_path)
     csv_name = f"lib_analysis_{binary_name}.csv"
+    # ---- NEW: write under stageAlibs/<tool_name>/ ----
+    tool_name = os.path.splitext(binary_name)[0]      # e.g., "genus" from "genus"
+    out_dir = os.path.join("stageAlibs", tool_name)
+    os.makedirs(out_dir, exist_ok=True)
+    csv_name = os.path.join(out_dir, csv_name)        # stageAlibs/<tool>/lib_analysis_<binary>.csv
+    # -------------------------------------------------
+
 
     with open(csv_name, "w", newline="") as out:
 

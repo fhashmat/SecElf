@@ -69,6 +69,12 @@ def stage_a_strings_process(binary_path):
 
     binary_name = os.path.basename(binary_path)
     csv_name = f"strings_extracted_{binary_name}.csv"
+     # ---- NEW: write under stageAstrings/<tool_name>/ ----
+    tool_name = os.path.splitext(binary_name)[0]     # e.g., "genus" from "genus"
+    out_dir = os.path.join("stageAstrings", tool_name)
+    os.makedirs(out_dir, exist_ok=True)
+    csv_name = os.path.join(out_dir, csv_name)       # stageAstrings/<tool>/strings_extracted_<binary>.csv
+    # ----------------------------------------------------
 
     with open(csv_name, "w", newline="") as out:
         writer = csv.writer(out)
@@ -78,4 +84,6 @@ def stage_a_strings_process(binary_path):
 
 
     print(f"Extracted strings written to {csv_name}")
+
+
 

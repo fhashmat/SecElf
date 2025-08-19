@@ -17,6 +17,7 @@
 from elftools.elf.elffile import ELFFile
 import csv
 import subprocess
+import os
 
 # ---------------------------------------------------------------
 # extract_function_symbols()
@@ -200,6 +201,24 @@ def write_functions_to_csv(functions, output_file="functions_stage_a2.csv"):
     print("Functions extracted and written to functions.csv (with Obfuscated column)")
 
 
+# ---------------------------------------------------------------
+# stage_a2_process()
+#
+# Orchestrates A2: open ELF, extract function symbols, and
+# write CSV under stageAfuncs/<tool_name>/functions_extracted_<binary>.csv
+# ---------------------------------------------------------------
+def stage_a2_process(binary_path):
+    with open(binary_path, "rb") as fp:
+        elf_file = ELFFile(fp)
+        functions = extract_function_symbols(elf_file)
+
+    binary_name = os.path.basename(binary_path)                 # e.g., "genus"
+    tool_name   = os.path.splitext(binary_name)[0]              # e.g., "genus"
+    out_dir     = os.path.join("stageAfuncs", tool_name)        # stageAfuncs/genus
+    os.makedirs(out_dir, exist_ok=True)
+
+    out_csv = os.path.join(out_dir, f"functions_extracted_{binary_name}.csv")
+    write_functions_to_csv(functions, output_file=out_csv)
 
 
 
