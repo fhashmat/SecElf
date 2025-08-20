@@ -1,36 +1,58 @@
-# SecElf
+**Stage A: Binary Analysis**
 
-**A multi-stage ELF binary analysis and vulnerability mapping tool.**
+Stage A extracts and enriches information from ELF binaries in three sub-stages:
 
----
+**A1 – Libraries**
 
-## What is SecElf?
+**Input: ELF binary**
 
-SecElf is a security analysis pipeline for ELF binaries. It:
-- extracts strings, symbols, and linked libraries (Stage A)
-- maps libraries to packages using RPM (Stage B)
-- cross-references packages with CVEs from the cvelist (Stage C)
+**Process:**
 
----
+Extracts DT_NEEDED entries (declared libraries).
 
-## Installation
+Resolves actual library paths on the host using ldd.
 
-SecElf currently requires:
-- Python 3.8+
-- pip to install dependencies (coming soon in requirements.txt)
-- Linux system with `rpm` available (for Stage B)
-- pyelftools Python library
+Output: CSV with columns:
+Library | Resolved Path | Note
 
----
+**Run:**
 
-## Quick Start
+PYTHONPATH=src python3 scripts/run_stagea.py <binary>
 
-```bash
-# Stage A
-python scripts/run_stagea.py /path/to/binary
+**A2 – Functions**
 
-# Stage B
-python scripts/run_stageb.py
+**Input: ELF binary**
 
-# Stage C
-python scripts/run_stagec.py
+**Process:**
+
+Parses ELF symbol tables to extract functions.
+
+Records function name, demangled name, address, size, section, and type.
+
+Adds placeholder Obfuscated column.
+
+**Output: CSV in:**
+stageAfuncs/<tool_name>/functions_extracted_<binary>.csv
+
+**Run:**
+
+PYTHONPATH=src python3 scripts/run_stagea2.py <binary>
+
+**A3 – Function Categorization**
+
+**Input: Stage A2 function CSV**
+
+**Process:**
+
+Detects obfuscation (mangled names, entropy, suspicious patterns).
+
+Categorizes functions into buckets (e.g., crypto, net, file, proc).
+
+Records reasoning for each categorization.
+
+**Output: CSV in:**
+stageA3/<tool_name>/functions_obfuscated_<binary>.csv
+
+**Run:**
+
+PYTHONPATH=src python3 scripts/run_stagea3.py <binary>
