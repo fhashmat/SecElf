@@ -2,7 +2,7 @@
 
 To analyze a binary with all Stage A sub-stages (A1 → A2 → A3), run:
 
-## Stage A1: Extract libraries
+Stage A1: Extract libraries
 ```bash
 PYTHONPATH=src python3 scripts/run_stagea.py <binary>
 
