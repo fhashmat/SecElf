@@ -6,6 +6,8 @@
 #
 # Usage:
 #   PYTHONPATH=src python3 -m pytest
+#To Run only the specific Test
+#   PYTHONPATH=src python3 -m pytest tests/test_stagea3.py
 # ---------------------------------------------------------------
 
 import csv

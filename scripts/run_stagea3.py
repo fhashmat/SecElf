@@ -3,32 +3,27 @@
 # ---------------------------------------------------------------
 # This is the CLI entry point for Stage A3 of SecElf.
 #
-# It loads functions from functions_stage_a2.csv,
-# applies the obfuscation categorizer heuristics,
-# and saves the results to stagea3_obfuscated_functions.csv.
+# It loads the A2 CSV for a given binary:
+#   stageAfuncs/<tool>/functions_extracted_<binary>.csv
+# applies name-based heuristics to add:
+#   - ObfuscationCategory/Score/Reason
+#   - FunctionType/TypeReason
+# and writes:
+#   stageA3/<tool>/functions_obfuscated_<binary>.csv
 #
 # Usage:
-#   PYTHONPATH=src python3 scripts/run_stagea3.py
+#   PYTHONPATH=src python3 scripts/run_stagea3.py <path_to_binary>
+#   e.g., PYTHONPATH=src python3 scripts/run_stagea3.py tests/fixtures/dummy_binary
 # ---------------------------------------------------------------
 
-from secelf.stage_a3_obfuscated_function_categorizer import placeholder_ghidra_obfuscated_function_categorizer, write_categorized_obfuscated_functions
-import csv
+import sys
+from secelf.stage_a3_obfuscated_function_categorizer import stage_a3_process
 
 def main():
-    input_file = "functions_stage_a2.csv"
-    output_file = "stagea3_obfuscated_functions.csv"
-
-    try:
-        with open(input_file, "r") as f:
-            reader = csv.DictReader(f)
-            functions = list(reader)
-    except FileNotFoundError:
-        print(f"ERROR: {input_file} not found.")
-        return
-
-    categorized = placeholder_ghidra_obfuscated_function_categorizer(functions)
-    write_categorized_obfuscated_functions(categorized, output_file)
-    print(f"Obfuscation categorization complete. Results saved to {output_file}")
+    if len(sys.argv) < 2:
+        print("Usage: python3 scripts/run_stagea3.py <path_to_binary>")
+        sys.exit(1)
+    stage_a3_process(sys.argv[1])
 
 if __name__ == "__main__":
     main()
