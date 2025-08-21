@@ -4,6 +4,8 @@ import sys         # For accessing command-line arguments
 import os
 
 # TO RUN: PYTHONPATH=src python3 src/secelf/stage_b.py lib_analysis_dummy_binary.csv
+#PYTHONPATH=src python3 src/secelf/stage_b.py /path/to/dummy_binary
+
 
 
 # The following helper function gets both binary and source package info for a given library path.
@@ -69,7 +71,8 @@ if len(sys.argv) < 2:
 
 binary_path = sys.argv[1]
 binary_name = os.path.basename(binary_path)
-input_csv = f"lib_analysis_{binary_name}.csv"
+tool_name = os.path.splitext(binary_name)[0]  # e.g., "genus" from "genus"
+input_csv = os.path.join("stageAlibs", tool_name, f"lib_analysis_{binary_name}.csv")
 
 with open(input_csv, "r") as f:
     reader = csv.DictReader(f)
@@ -87,12 +90,15 @@ with open(input_csv, "r") as f:
             print("Source Package:", source_pkg)
 
 # BELOW CODE IS FOR STORING LIBRARY NAME AND ITS PACKAGE VERSION INTO NEW CSV FILE
-# This code writes the resolved package info (e.g., glibc 2.28) into a separate CSV for each library
-with open("library_packages.csv", "w", newline="") as out_file:
+# Output now goes under stageBlibs/<tool_name>/packages_<binary_name>.csv
+out_dir = os.path.join("stageBlibs", tool_name)
+os.makedirs(out_dir, exist_ok=True)
+output_csv = os.path.join(out_dir, f"packages_{binary_name}.csv")
+
+with open(output_csv, "w", newline="") as out_file:
     writer = csv.writer(out_file)
     writer.writerow(["LibraryPath", "BinaryPackage", "SourcePackage", "VersionOnly", "Status"])  # Added Status column
     for lib, (binpkg, srcpkg) in results.items():
-        # Extract just the version part
         version = ""
         if binpkg:
             if ":" in binpkg:  # dpkg format
@@ -102,7 +108,9 @@ with open("library_packages.csv", "w", newline="") as out_file:
                 if len(parts) >= 2:
                     version = parts[1]
 
-        status = "resolved" if binpkg else "unresolved"
-
+        status = "Resolved" if binpkg else "Unresolved"
         writer.writerow([lib, binpkg, srcpkg, version, status])
+
+print(f"[Stage B] Wrote output to: {output_csv}")
+
 
