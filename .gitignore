@@ -11,3 +11,22 @@ tests/fixtures/*
 # ignore editor swap/lock files
 *~
 *.swp
+# Ignore generated CSV/TSV
+*.csv
+*.tsv
+
+# Keep docs CSVs if needed
+!docs/*.csv
+
+# Build/output dirs
+outputs/
+stageAlibs/
+stageBlibs/
+
+# Editor/lock/tmp files
+.~lock.*.csv#
+.~lock.*.tsv#
+.nfs*
+
+# Scratch files
+hello.c
