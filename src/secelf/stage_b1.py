@@ -272,6 +272,35 @@ def write_b1_output(rows, output_csv):
         writer.writeheader()
         writer.writerows(rows)
 
+def write_b1_summary(tool, version, enriched_rows, output_csv):
+    """
+    Write one shared-library summary row for Table 2.
+    """
+
+    summary = summarize_shared_metadata(enriched_rows, outdated_before_year=2024)
+
+    row = {
+        "Tool": tool,
+        "Version": version,
+        "SharedLibraryCategory": summary["SharedLibraryCategory"],
+        "SharedPackageMaintainer": summary["SharedPackageMaintainer"],
+        "SharedOutdatedDependencyCount": summary["SharedOutdatedDependencyCount"],
+        "OldestOutdatedDependencyUpdateYear": summary["OldestOutdatedDependencyUpdateYear"],
+    }
+
+    fieldnames = [
+        "Tool",
+        "Version",
+        "SharedLibraryCategory",
+        "SharedPackageMaintainer",
+        "SharedOutdatedDependencyCount",
+        "OldestOutdatedDependencyUpdateYear",
+    ]
+
+    with open(output_csv, "w", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerow(row)
 
 def stage_b1_process(tool, version, stageb_csv_path):
     """
@@ -316,4 +345,6 @@ def stage_b1_process(tool, version, stageb_csv_path):
     output_csv = os.path.join(output_dir, "dependency_risk_metadata.csv")
 
     write_b1_output(enriched_rows, output_csv)
+    summary_csv = os.path.join(output_dir, "shared_dependency_summary.csv")
+    write_b1_summary(tool, version, enriched_rows, summary_csv)
     print(f"[OK] Wrote Stage B1 output to: {output_csv}")
