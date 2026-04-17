@@ -119,13 +119,47 @@ def get_package_maintainer(pkg_name):
     return ""
 
 
-def get_oldest_update(pkg_name):
+def get_latest_update(pkg_name):
     """
-    Placeholder for package age/update metadata.
+    Extract the most recent package changelog date from
+    /usr/share/doc/<package>/changelog.Debian.gz.
 
-    For now, return empty string.
-    We will improve this after the first end-to-end B1 run works.
+    Why:
+        apt-cache show gives version and maintainer, but not a useful update date.
+        Debian/Ubuntu changelogs usually store maintainer entries with dates.
+
+    Returns:
+        A date string from the first changelog entry if available.
+        Empty string otherwise.
     """
+    pkg = clean_package_name(pkg_name)
+    if not pkg:
+        return ""
+
+    changelog_path = f"/usr/share/doc/{pkg}/changelog.Debian.gz"
+
+    try:
+        result = subprocess.run(
+            ["zgrep", "-m", "1", "^ -- ", changelog_path],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+            timeout=5,
+        )
+
+        line = result.stdout.strip()
+        if not line:
+            return ""
+
+        # Example line:
+        # -- Nishit Majithia <...>  Fri, 30 Jan 2026 13:50:56 +0530
+        parts = line.split("  ")
+        if len(parts) >= 2:
+            return parts[-1].strip()
+
+    except Exception:
+        pass
+
     return ""
 
 
@@ -201,7 +235,7 @@ def stage_b1_process(tool, version, stageb_csv_path):
         upstream_project = infer_upstream_project(binary_package, source_package)
         library_category = categorize_library(upstream_project)
         maintainer = get_package_maintainer(binary_package or source_package)
-        oldest_update = get_oldest_update(binary_package or source_package)
+        oldest_update = get_latest_update(binary_package or source_package)
 
         enriched_rows.append({
             "Tool": tool,
