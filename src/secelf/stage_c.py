@@ -72,15 +72,42 @@ def extract_title(data):
     except Exception:
         return ""
 def extract_cvss_score(data):
+    """
+    Extract the best available CVSS base score.
+
+    Search order:
+      1. CNA metrics
+      2. ADP metrics
+      3. Prefer v4.0, then v3.1, then v3.0, then v2.0
+
+    Returns:
+      score as string/number if found, else ""
+    """
     data = coerce_cve_dict(data)
-    try:
-        metrics = data["containers"]["cna"].get("metrics", [])
-        for entry in metrics:
-            if "cvssV3_1" in entry:
-                return entry["cvssV3_1"].get("baseScore", "N/A")
-        return "N/A"
-    except Exception:
-        return "N/A"
+
+    metric_keys = ["cvssV4_0", "cvssV3_1", "cvssV3_0", "cvssV2_0"]
+
+    containers = data.get("containers", {}) or {}
+
+    candidate_metric_lists = []
+
+    cna = containers.get("cna", {}) or {}
+    candidate_metric_lists.append(cna.get("metrics", []) or [])
+
+    adp_entries = containers.get("adp", []) or []
+    for entry in adp_entries:
+        if isinstance(entry, dict):
+            candidate_metric_lists.append(entry.get("metrics", []) or [])
+
+    for metrics in candidate_metric_lists:
+        for key in metric_keys:
+            for entry in metrics:
+                if key in entry:
+                    score = entry[key].get("baseScore", "")
+                    if score != "":
+                        return score
+
+    return ""
 
 def extract_cwe(data):
     data = coerce_cve_dict(data)
