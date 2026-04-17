@@ -28,6 +28,8 @@ import csv
 import os
 import re
 import subprocess
+from datetime import datetime, timezone
+from email.utils import parsedate_to_datetime
 
 
 def clean_package_name(pkg_name):
@@ -162,6 +164,63 @@ def get_latest_update(pkg_name):
 
     return ""
 
+def extract_year(date_str):
+    """
+    Extract year from a changelog date string.
+
+    Example:
+        "Fri, 14 Oct 2022 18:33:00 -0300" -> 2022
+    """
+    if not date_str:
+        return None
+    try:
+        dt = parsedate_to_datetime(date_str)
+        if dt.tzinfo is None:
+            dt = dt.replace(tzinfo=timezone.utc)
+        return dt.year
+    except Exception:
+        return None
+
+
+def summarize_shared_metadata(enriched_rows, outdated_before_year=2024):
+    """
+    Build one summary row for the shared-library side of Table 2.
+
+    We summarize by unique upstream project, not by duplicated package rows.
+    """
+    unique_projects = {}
+    for row in enriched_rows:
+        proj = row["UpstreamProject"]
+        if proj not in unique_projects:
+            unique_projects[proj] = row
+
+    # Unique categories
+    categories = sorted({
+        row["LibraryCategory"]
+        for row in unique_projects.values()
+        if row["LibraryCategory"]
+    })
+
+    # Unique maintainers
+    maintainers = sorted({
+        row["Maintainer"]
+        for row in unique_projects.values()
+        if row["Maintainer"]
+    })
+
+    # Outdated projects: latest observed update year < cutoff
+    outdated_years = []
+    for row in unique_projects.values():
+        yr = extract_year(row["LatestUpdate"])
+        if yr is not None and yr < outdated_before_year:
+            outdated_years.append(yr)
+
+    return {
+        "SharedLibraryCategory": "; ".join(categories) if categories else "",
+        "SharedPackageMaintainer": "; ".join(maintainers) if maintainers else "",
+        "SharedOutdatedDependencyCount": len(outdated_years),
+        "OldestOutdatedDependencyUpdateYear": min(outdated_years) if outdated_years else "N/A",
+    }
 
 def load_stageb_rows(csv_path):
     """
@@ -203,7 +262,7 @@ def write_b1_output(rows, output_csv):
         "VersionOnly",
         "LibraryCategory",
         "Maintainer",
-        "OldestUpdate",
+        "LatestUpdate",
     ]
 
     os.makedirs(os.path.dirname(output_csv), exist_ok=True)
@@ -246,7 +305,7 @@ def stage_b1_process(tool, version, stageb_csv_path):
             "VersionOnly": version_only,
             "LibraryCategory": library_category,
             "Maintainer": maintainer,
-            "OldestUpdate": oldest_update,
+            "LatestUpdate": oldest_update,
         })
 
     output_dir = os.path.join(
